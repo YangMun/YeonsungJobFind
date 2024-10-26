@@ -1,0 +1,6 @@
+
+# 이미지 설정을 위한 ios 방법
+iOS에서는 Info.plist에 권한 설정을 추가해야 할 수 있습니다.
+
+# 이미지 설정을 위한 andriod 방법
+Android에서는 AndroidManifest.xml에 권한 설정을 추가해야 할 수 있습니다.
