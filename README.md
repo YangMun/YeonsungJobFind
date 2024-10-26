@@ -1,15 +1,17 @@
 # YEONSUNG_JOBFIND 프로젝트
 
+
 ## 프로젝트 개요
 YEONSUNG_JOBFIND는 연성대학교 학생들을 위한 구직 플랫폼 앱입니다. 이 앱은 구직자, 고용주, 관리자를 위한 다양한 기능을 제공합니다.
 
 ## 기술 스택
 - Frontend: React Native, TypeScript
-- Backend: Node.js
-- Database: MySQL (추정)
+- Backend: express.js
+- Database: Mariadb
 
-## 프로젝트 구조 상세 설명
+## 프로젝트 구조
 
+```
 YEONSUNG_JOBFIND
 ├── server
 │   ├── node_modules: 서버 측 의존성 모듈
@@ -75,6 +77,8 @@ YEONSUNG_JOBFIND
 ├── package-lock.json: 프로젝트 의존성 버전 고정 파일
 ├── package.json: 프로젝트 설정 및 의존성 정의
 └── tsconfig.json: TypeScript 설정 파일
+
+```
 
 ## 데이터베이스 구조 (DBText.txt 참고)
 주요 테이블:
