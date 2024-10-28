@@ -66,9 +66,14 @@ const ExperienceActivityEducationForm = () => {
     }
 
     try {
+      const baseURL = Platform.select({
+        ios: 'http://localhost:3000',
+        android: 'http://10.0.2.2:3000',
+        default: 'http://localhost:3000'
+      });
       let response;
       if (mode === 'add') {
-        response = await axios.post('http://localhost:3000/api/save-experience-activity', {
+        response = await axios.post(`${baseURL}/api/save-experience-activity`, {
           jobSeekerId: userId,
           activityType,
           organization,
@@ -77,7 +82,7 @@ const ExperienceActivityEducationForm = () => {
           description
         });
       } else {
-        response = await axios.put(`http://localhost:3000/api/update-experience-activity/${activityId}`, {
+        response = await axios.put(`${baseURL}/api/update-experience-activity/${activityId}`, {
           activityType,
           organization,
           startDate,

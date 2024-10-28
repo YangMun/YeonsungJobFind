@@ -116,8 +116,14 @@ const GradInfo = () => {
     const validationResult = validateGradInfo(gradInfoData);
     if (validationResult.isValid) {
       try {
+        const baseURL = Platform.select({
+          ios: 'http://localhost:3000',
+          android: 'http://10.0.2.2:3000',
+          default: 'http://localhost:3000'
+        });
+
         let response;
-        response = await axios.post('http://localhost:3000/api/save-grad-info', gradInfoData);
+        response = await axios.post(`${baseURL}/api/save-grad-info`, gradInfoData);
         
         if (response.data.success) {
           console.log(mode === 'edit' ? "학력 정보가 성공적으로 수정되었습니다." : "학력 정보가 성공적으로 저장되었습니다.");

@@ -6,11 +6,15 @@
  */
 
 import React, { useState, useRef } from 'react';
-import { View, Text, StyleSheet, ScrollView, TextInput, TouchableOpacity, Alert, SafeAreaView } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TextInput, TouchableOpacity, Alert, SafeAreaView, Platform } from 'react-native';
 import { Calendar, LocaleConfig, DateData } from 'react-native-calendars';
 import { validatePostJob } from '../../common/utils/validationUtils';
 import { useAuth } from '../../context/AuthContext';
 import axios from 'axios';
+
+const API_BASE_URL = Platform.OS === 'android' 
+  ? 'http://10.0.2.2:3000' 
+  : 'http://localhost:3000';
 
 // 한글 설정
 LocaleConfig.locales['kr'] = {
@@ -105,7 +109,7 @@ const PostJobScreen: React.FC = () => {
 
     if (validationResult.isValid) {
       try {
-        const response = await axios.post('http://localhost:3000/api/post-job', postJobData);
+        const response = await axios.post(`${API_BASE_URL}/api/post-job`, postJobData);
         if (response.data.success) {
           Alert.alert('성공', '구인 공고가 성공적으로 등록되었습니다.');
           resetForm();  // 폼 초기화

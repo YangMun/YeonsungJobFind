@@ -6,12 +6,16 @@
  */
 
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, SafeAreaView, ActivityIndicator, TextInput, Alert } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, SafeAreaView, ActivityIndicator, TextInput, Alert, Platform } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import axios from 'axios';
 import { useAuth } from '../../context/AuthContext';
 import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
+
+const API_BASE_URL = Platform.OS === 'android' 
+  ? 'http://10.0.2.2:3000' 
+  : 'http://localhost:3000';
 
 // ProfileData 인터페이스 정의
 interface ProfileData {
@@ -42,7 +46,7 @@ const ProfileScreen: React.FC = () => {
 
   const fetchProfileData = async () => {
     try {
-      const response = await axios.get(`http://localhost:3000/api/employer-profile/${userId}`);
+      const response = await axios.get(`${API_BASE_URL}/api/employer-profile/${userId}`);
       if (response.data.success) {
         setProfileData(response.data.profile);
         setEditedPhone(response.data.profile.phone_number);
@@ -60,7 +64,7 @@ const ProfileScreen: React.FC = () => {
   const handleEdit = async () => {
     if (isEditing) {
       try {
-        const response = await axios.put(`http://localhost:3000/api/update-employer-profile/${userId}`, {
+        const response = await axios.put(`${API_BASE_URL}/api/update-employer-profile/${userId}`, {
           phone_number: editedPhone,
           email: editedEmail,
         });
@@ -94,7 +98,7 @@ const ProfileScreen: React.FC = () => {
           text: "삭제", 
           onPress: async () => {
             try {
-              const response = await axios.delete(`http://localhost:3000/api/delete-employer/${userId}`);
+              const response = await axios.delete(`${API_BASE_URL}/api/delete-employer/${userId}`);
               if (response.data.success) {
                 Alert.alert("삭제 완료", "계정이 성공적으로 삭제되었습니다.", [
                   {
