@@ -1,6 +1,11 @@
 import axios from 'axios';
+import { Platform } from 'react-native';
 
-const API_URL = 'http://localhost:3000/api';
+const API_URL = Platform.select({
+  ios: 'http://localhost:3000/api',
+  android: 'http://10.0.2.2:3000/api',
+  default: 'http://localhost:3000/api', // 웹이나 다른 플랫폼을 위한 기본값
+});
 
 interface ValidationResult {
   isValid: boolean;
@@ -49,6 +54,21 @@ export interface GradInfoData {
   major: string;
 }
 
+// 자격 데이터 인터페이스 추가
+export interface CertificationData {
+  certificationName: string;
+  issuingOrganization: string;
+  acquisitionDate: string;
+}
+
+// Certification 인터페이스 추가
+export interface Certification {
+  id: number;
+  certification_name: string;
+  issuing_organization: string;
+  acquisition_date: string;
+}
+
 export const validateJobSeeker = async (
   studentId: string,
   email: string,
@@ -82,7 +102,7 @@ export const validateJobSeeker = async (
     return response.data;
   } catch (error) {
     console.error('API 요청 오류:', error);
-    return { isValid: false, message: '서버 오류가 발생했습니다. 나중에 다시 시도해주세요.' };
+    return { isValid: false, message: '서버 오류가 발생했습니다. 나에 다시 시도해주세요.' };
   }
 };
 
@@ -162,7 +182,7 @@ export const login = async (
 };
 
 export const validatePostJob = (data: PostJobData): PostJobValidationResult => {
-  // 1. 모든 필드가 입력되었는지 확인
+  // 1. 모든 필드가 입력되었는 확인
   for (const [key, value] of Object.entries(data)) {
     if (!value || value.trim() === '') {
       return { isValid: false, message: '모든 항목을 입력하세요' };
@@ -239,7 +259,7 @@ export const validateDate = (date: string): boolean => {
 };
 
 export const validateGradInfo = (data: GradInfoData): ValidationResult => {
-  // 모든 필수 필드가 입력되었는지 확인
+  // 모든 필수 필드가 력되었는지 확인
   if (!data.universityType || !data.schoolName || !data.admissionDate || !data.graduationDate || !data.graduationStatus || !data.major) {
     return { isValid: false, message: '모든 필수 항목을 입력해주세요.' };
   }
@@ -301,7 +321,7 @@ export const validateExperienceActivity = (data: ExperienceActivityData): Valida
     return { isValid: false, message: '모든 필드를 입력해주세요.' };
   }
 
-  // 활동구분 유효성 검사
+  // 동구분 유효성 검사
   const activityTypes = ['교내활동', '인턴', '자원봉사', '동아리', '아르바이트', '사회활동', '수행과제', '해외연수'];
   if (!activityTypes.includes(data.activityType)) {
     return { isValid: false, message: '올바른 활동구분을 선택해주세요.' };
@@ -338,4 +358,37 @@ export const validateExperienceDate = (date: string): boolean => {
   const dateRegex = /^\d{4}-\d{2}$/;
   return dateRegex.test(date);
 };
+
+
+// 자격증 유효성 검사 함수 추가
+export const validateCertification = (data: CertificationData): ValidationResult => {
+  // 모든 필드 입력 확인
+  if (!data.certificationName) {
+    return { isValid: false, message: '자격증명을 입력해주세요.' };
+  }
+  if (!data.issuingOrganization) {
+    return { isValid: false, message: '발행처/기관을 입력해주세요.' };
+  }
+  if (!data.acquisitionDate) {
+    return { isValid: false, message: '취득일을 선택해주세요.' };
+  }
+
+  // 길이 제한 검사
+  if (data.certificationName.length > 50) {
+    return { isValid: false, message: '자격증명은 50자를 초과할 수 없습니다.' };
+  }
+  if (data.issuingOrganization.length > 50) {
+    return { isValid: false, message: '발행처/기관은 50자를 초과할 수 없습니다.' };
+  }
+
+  // 날짜 형식 검사 (YYYY-MM-DD)
+  const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
+  if (!dateRegex.test(data.acquisitionDate)) {
+    return { isValid: false, message: '올바른 날짜 형식이 아닙니다.' };
+  }
+
+  return { isValid: true, message: '유효성 검사 통과' };
+};
+
+
 

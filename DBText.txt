@@ -1,76 +1,76 @@
-mariadb txt °¡ÀÌµå 
+mariadb txt ê°€ì´ë“œ 
 
-# Workbench Á¢¼Ó
+# Workbench ì ‘ì†
 --------------------------------
-# mariadb Á¢¼Ó
+# mariadb ì ‘ì†
 mariadb -u root -p
-# ºñ¹Ğ¹øÈ£ 1234
+# ë¹„ë°€ë²ˆí˜¸ 1234
 
-# ºñ¹Ğ¹øÈ£ ¼³Á¤
+# ë¹„ë°€ë²ˆí˜¸ ì„¤ì •
 ALTER USER 'root'@'localhost' IDENTIFIED BY '1234';
 
-# µ¥ÀÌÅÍº£ÀÌ½º »ı¼º
+# ë°ì´í„°ë² ì´ìŠ¤ ìƒì„±
 CREATE DATABASE ysu_job;
 
-# ¾ÆÀÌµğ »ı¼º
+# ì•„ì´ë”” ìƒì„±
 create user 'ysu'@'%'identified by '1234';
 
-# ±ÇÇÑ ºÎ¿©
+# ê¶Œí•œ ë¶€ì—¬
 GRANT ALL PRIVILEGES ON ysu_job.* TO 'ysu'@'%'; 
 
-# ±ÇÇÑ Àû¿ë
+# ê¶Œí•œ ì ìš©
 FLUSH PRIVILEGES;
 --------------------------------
-# ysu_job µ¥ÀÌÅÍº£ÀÌ½º »ç¿ë
+# ysu_job ë°ì´í„°ë² ì´ìŠ¤ ì‚¬ìš©
 USE ysu_job;
 
-# manager Å×ÀÌºí »ı¼º
+# manager í…Œì´ë¸” ìƒì„±
 CREATE TABLE manager (
     id CHAR(7) PRIMARY KEY,
     password CHAR(11) NOT NULL
 );
 
-# manager Å×ÀÌºí¿¡ µ¥ÀÌÅÍ »ğÀÔ
+# manager í…Œì´ë¸”ì— ë°ì´í„° ì‚½ì…
 INSERT INTO manager (id, password) VALUES ('manager', 'manager1234');
 
-# employer Å×ÀÌºí »ı¼º
+# employer í…Œì´ë¸” ìƒì„±
 CREATE TABLE employer (
     id VARCHAR(7) PRIMARY KEY,
 	password VARCHAR(15) NOT NULL,
     department_name VARCHAR(15) NOT NULL,
-    phone_number VARCHAR(30) DEFAULT '¾øÀ½',
-    email VARCHAR(30) DEFAULT '¾øÀ½'
+    phone_number VARCHAR(30) DEFAULT 'ì—†ìŒ',
+    email VARCHAR(30) DEFAULT 'ì—†ìŒ'
 );
 
-# jobSeeker Å×ÀÌºí »ı¼º
+# jobSeeker í…Œì´ë¸” ìƒì„±
 CREATE TABLE jobSeeker (
     id VARCHAR(15) PRIMARY KEY,
     email VARCHAR(30) NOT NULL UNIQUE,
     password VARCHAR(20) NOT NULL
 );
 --------------------------------
--- PostJob Å×ÀÌºí »ı¼º
+-- PostJob í…Œì´ë¸” ìƒì„±
 CREATE TABLE PostJob (
     id INT AUTO_INCREMENT PRIMARY KEY,
     employer_id varchar(7) NOT NULL,  
-    title VARCHAR(30) NOT NULL,   # °ø°í Á¦¸ñ
-    contents VARCHAR(500) NOT NULL, # »ó¼¼ ³»¿ë
-    company_name VARCHAR(15) NOT NULL, # È¸»ç¸í
-    location VARCHAR(15) NOT NULL, # ±Ù¹« À§Ä¡
-    qualification_type VARCHAR(10) NOT NULL, # Áö¿ø ÀÚ°İ
-    work_period_start DATE NOT NULL, # ±Ù¹« ½ÃÀÛÀÏ
-    work_period_end DATE NOT NULL, # ±Ù¹« Á¾·áÀÏ
-    recruitment_deadline DATE NOT NULL, # ¸ğÁı ±âÇÑ
-    hourly_wage INT NOT NULL, # ½Ã±Ş
-    application_method VARCHAR(30) NOT NULL, # Áö¿ø ¹æ¹ı
-    contact_number VARCHAR(15) NOT NULL, # ¹®ÀÇ ÀüÈ­¹øÈ£
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, # ·¹ÄÚµå »ı¼º ½Ã°£
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP, # ·¹ÄÚµå ¼öÁ¤ ½Ã°£
+    title VARCHAR(30) NOT NULL,   # ê³µê³  ì œëª©
+    contents VARCHAR(500) NOT NULL, # ìƒì„¸ ë‚´ìš©
+    company_name VARCHAR(15) NOT NULL, # íšŒì‚¬ëª…
+    location VARCHAR(15) NOT NULL, # ê·¼ë¬´ ìœ„ì¹˜
+    qualification_type VARCHAR(10) NOT NULL, # ì§€ì› ìê²©
+    work_period_start DATE NOT NULL, # ê·¼ë¬´ ì‹œì‘ì¼
+    work_period_end DATE NOT NULL, # ê·¼ë¬´ ì¢…ë£Œì¼
+    recruitment_deadline DATE NOT NULL, # ëª¨ì§‘ ê¸°í•œ
+    hourly_wage INT NOT NULL, # ì‹œê¸‰
+    application_method VARCHAR(30) NOT NULL, # ì§€ì› ë°©ë²•
+    contact_number VARCHAR(15) NOT NULL, # ë¬¸ì˜ ì „í™”ë²ˆí˜¸
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, # ë ˆì½”ë“œ ìƒì„± ì‹œê°„
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP, # ë ˆì½”ë“œ ìˆ˜ì • ì‹œê°„
     FOREIGN KEY (employer_id) REFERENCES employer(id)
 );
 
 --------------------------------
--- NormalInformation Å×ÀÌºí »ı¼º
+-- NormalInformation í…Œì´ë¸” ìƒì„±
 CREATE TABLE NormalInformation (
     id INT AUTO_INCREMENT PRIMARY KEY,
     jobSeeker_id VARCHAR(15) NOT NULL,
@@ -79,17 +79,17 @@ CREATE TABLE NormalInformation (
     birthDate VARCHAR(8) NOT NULL,
     email VARCHAR(30) NOT NULL,
     phone VARCHAR(15) NOT NULL,
-    gender CHAR(2) DEFAULT '¹ÌÁ¤',
+    gender CHAR(2) DEFAULT 'ë¯¸ì •',
     FOREIGN KEY (jobSeeker_id) REFERENCES jobSeeker(id)
 );
 --------------------------------
--- ÇĞ·Â »çÇ× Å×ÀÌºí
+-- í•™ë ¥ ì‚¬í•­ í…Œì´ë¸”
 CREATE TABLE GradeInformation (
     id INT AUTO_INCREMENT PRIMARY KEY,
     jobSeeker_id VARCHAR(15) NOT NULL,
     university_type VARCHAR(10) NOT NULL,
     school_name VARCHAR(15) NOT NULL,
-    region VARCHAR(7) DEFAULT 'Áö¿ª ¼±ÅÃ',
+    region VARCHAR(7) DEFAULT 'ì§€ì—­ ì„ íƒ',
     admission_date VARCHAR(7),
     graduation_date VARCHAR(7),
     graduation_status VARCHAR(5) NOT NULL,
@@ -97,7 +97,7 @@ CREATE TABLE GradeInformation (
     FOREIGN KEY (jobSeeker_id) REFERENCES jobSeeker(id)
     );
 --------------------------------
--- È°µ¿/°æÇè Å×ÀÌºí
+-- í™œë™/ê²½í—˜ í…Œì´ë¸”
 CREATE TABLE ExperienceActivity (
     id INT AUTO_INCREMENT PRIMARY KEY,
     jobSeeker_id VARCHAR(15) NOT NULL,
@@ -106,5 +106,14 @@ CREATE TABLE ExperienceActivity (
     start_date VARCHAR(7),
     end_date VARCHAR(7),
     description VARCHAR(500) NOT NULL,
+    FOREIGN KEY (jobSeeker_id) REFERENCES jobSeeker(id)
+);
+-- ìê²©ì¦ ë° ë©´í—ˆ í…Œì´ë¸”
+CREATE TABLE certifications (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    jobSeeker_id VARCHAR(15) NOT NULL,
+    certification_name VARCHAR(50) NOT NULL,
+    issuing_organization VARCHAR(50) NOT NULL,
+    acquisition_date DATE NOT NULL,
     FOREIGN KEY (jobSeeker_id) REFERENCES jobSeeker(id)
 );

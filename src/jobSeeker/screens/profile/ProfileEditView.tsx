@@ -5,7 +5,7 @@ import { useNavigation, useFocusEffect, useRoute } from '@react-navigation/nativ
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import axios from 'axios';
 import { useAuth } from '../../../context/AuthContext';
-import { ActivityItem } from '../../../common/utils/validationUtils';
+import { ActivityItem, Certification } from '../../../common/utils/validationUtils';
 
 type RootStackParamList = {
   NormalInfo: undefined;
@@ -23,6 +23,7 @@ type RootStackParamList = {
     mode: 'add' | 'edit'; 
     activity?: ActivityItem 
   };
+  CertificationForm: undefined;  // mode나 certification 파라미터가 필요 없음
 };
 
 const ProfileEditView = () => {
@@ -40,11 +41,14 @@ const ProfileEditView = () => {
   const [hasEducationInfo, setHasEducationInfo] = useState(false);
   const [experienceActivities, setExperienceActivities] = useState<ActivityItem[]>([]);
   const [activityCount, setActivityCount] = useState(0);
+  const [certifications, setCertifications] = useState<Certification[]>([]);
+  const [certificationCount, setCertificationCount] = useState(0);
 
   useEffect(() => {
     fetchProfileSummary();
     fetchEducationInfo();
     fetchExperienceActivities();
+    fetchCertifications();
   }, []);
 
   const fetchProfileSummary = async () => {
@@ -96,11 +100,26 @@ const ProfileEditView = () => {
     }
   }, [userId]);
 
+  const fetchCertifications = useCallback(async () => {
+    if (!userId) return;
+
+    try {
+      const response = await axios.get(`http://localhost:3000/api/get-certifications/${userId}`);
+      if (response.data.success) {
+        setCertifications(response.data.certifications);
+        setCertificationCount(response.data.count);
+      }
+    } catch (error) {
+      console.error('자격증 정보 조회 오류:', error);
+    }
+  }, [userId]);
+
   useFocusEffect(
     useCallback(() => {
       fetchEducationInfo();
       fetchExperienceActivities();
-    }, [fetchEducationInfo, fetchExperienceActivities])
+      fetchCertifications();
+    }, [fetchEducationInfo, fetchExperienceActivities, fetchCertifications])
   );
 
   const handleNavigateToNormalInfo = () => {
@@ -147,6 +166,16 @@ const ProfileEditView = () => {
 
   const handleEditExperienceActivityEducation = (activity: ActivityItem) => {
     navigation.navigate('ExperienceActivityEducationForm', { mode: 'edit', activity });
+  };
+
+  const handleAddCertification = () => {
+    navigation.navigate('CertificationForm');  // 파라미터 없이 단순 네비게이션
+  };
+
+  // 날짜 포맷팅 함수 추가
+  const formatDate = (dateString: string) => {
+    // "2024-10-08T15:00:00.000Z" 형식에서 "2024-10-08" 형식으로 변환
+    return dateString.split('T')[0];
   };
 
   return (
@@ -255,6 +284,37 @@ const ProfileEditView = () => {
             </View>
           ))}
         </View>
+
+        {/* 새로운 자격 및 면허 섹션 */}
+        <View style={styles.certificateSection}>
+          <View style={styles.sectionHeader}>
+            <View style={styles.titleContainer}>
+              <Text style={styles.sectionTitle}>자격 및 면허</Text>
+              <Text style={styles.itemCount}>{certificationCount}</Text>
+            </View>
+            <TouchableOpacity 
+              style={styles.addButton}
+              onPress={handleAddCertification}
+            >
+              <Ionicons name="add" size={24} color="#4a90e2" />
+            </TouchableOpacity>
+          </View>
+          {certifications.map((cert: Certification, index) => (
+            <View key={index} style={styles.certItem}>
+              <View style={styles.certHeader}>
+                <Text style={styles.certName}>{cert.certification_name}</Text>
+                <TouchableOpacity style={styles.moreButton}>
+                  <Ionicons name="ellipsis-vertical" size={20} color="#666" />
+                </TouchableOpacity>
+              </View>
+              <Text style={styles.certDate}>
+                {formatDate(cert.acquisition_date)}
+              </Text>
+              <Text style={styles.certOrg}>{cert.issuing_organization}</Text>
+            </View>
+          ))}
+        </View>
+
       </ScrollView>
     </SafeAreaView>
   );
@@ -462,6 +522,37 @@ const styles = StyleSheet.create({
   activityDescription: {
     fontSize: 14,
     color: '#333',
+  },
+  certificateSection: {
+    padding: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: '#e0e0e0',
+  },
+  certItem: {
+    backgroundColor: '#f8f8f8',
+    borderRadius: 8,
+    padding: 16,
+    marginTop: 8,
+  },
+  certHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  certName: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#333',
+  },
+  certDate: {
+    fontSize: 14,
+    color: '#666',
+    marginTop: 4,
+  },
+  certOrg: {
+    fontSize: 14,
+    color: '#666',
+    marginTop: 2,
   },
 });
 

@@ -145,7 +145,7 @@ app.post('/api/post-job', async (req, res) => {
     res.json({ success: true, message: '구인 공고가 성공적으로 등록되었습니다.' });
   } catch (error) {
     console.error('데이터베이스 오류:', error);
-    res.status(500).json({ success: false, message: '서버 오류가 발생���니다.' });
+    res.status(500).json({ success: false, message: '서버 오류가 발생했습니다.' });
   }
 });
 
@@ -310,7 +310,7 @@ app.delete('/api/delete-employer/:id', async (req, res) => {
     // 트랜잭션 커밋
     await pool.query('COMMIT');
 
-    res.json({ success: true, message: '계정과 관련된 모든 정보가 성공적으로 제���었습니다.' });
+    res.json({ success: true, message: '계정과 관련된 모든 정보가 성공적으로 제었습니다.' });
   } catch (error) {
     // 오류 발생 시 롤백
     await pool.query('ROLLBACK');
@@ -531,7 +531,7 @@ app.post('/api/save-experience-activity', async (req, res) => {
   }
 
   // 활동구분 유효성 검사
-  const activityTypes = ['교내활동', '인���', '자원봉사', '동아리', '아르바이트', '사회활동', '수행과제', '해외연수'];
+  const activityTypes = ['교내활동', '인', '자원봉사', '동아리', '아르바이트', '사회활동', '수행과제', '해외연수'];
   if (!activityTypes.includes(activityType)) {
     return res.status(400).json({ success: false, message: '올바른 활동구분을 선택해주세요.' });
   }
@@ -562,7 +562,7 @@ app.post('/api/save-experience-activity', async (req, res) => {
 
     await pool.query(query, queryParams);
 
-    res.json({ success: true, message: '경험/활동/교육 정보가 성공적으로 저장되었습니��.' });
+    res.json({ success: true, message: '경험/활동/교육 정보가 성공적으로 저장되었습니다.' });
   } catch (error) {
     console.error('데이터베이스 오류:', error);
     res.status(500).json({ success: false, message: '서버 오류가 발생했습니다.' });
@@ -646,6 +646,75 @@ app.get('/api/get-experience-activities/:jobSeekerId', async (req, res) => {
       });
     } else {
       res.json({ success: false, message: '경험/활동/교육 정보가 없습니다.' });
+    }
+  } catch (error) {
+    console.error('데이터베이스 오류:', error);
+    res.status(500).json({ success: false, message: '서버 오류가 발생했습니다.' });
+  }
+});
+
+// 자격증 정보 저장 API
+app.post('/api/save-certification', async (req, res) => {
+  const { jobSeekerId, certificationName, issuingOrganization, acquisitionDate } = req.body;
+  
+  // 입력값 검증
+  if (!jobSeekerId || !certificationName || !issuingOrganization || !acquisitionDate) {
+    return res.status(400).json({ success: false, message: '모든 필드를 입력해주세요.' });
+  }
+
+  // 길이 제한 검사
+  if (certificationName.length > 50) {
+    return res.status(400).json({ success: false, message: '자격증명은 50자를 초과할 수 없습니다.' });
+  }
+  if (issuingOrganization.length > 50) {
+    return res.status(400).json({ success: false, message: '발행처/기관은 50자를 초과할 수 없습니다.' });
+  }
+
+  // 날짜 형식 검사 (YYYY-MM-DD)
+  const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
+  if (!dateRegex.test(acquisitionDate)) {
+    return res.status(400).json({ success: false, message: '올바른 날짜 형식이 아닙니다.' });
+  }
+
+  try {
+    const query = `
+      INSERT INTO certifications 
+      (jobSeeker_id, certification_name, issuing_organization, acquisition_date) 
+      VALUES (?, ?, ?, ?)
+    `;
+    const queryParams = [jobSeekerId, certificationName, issuingOrganization, acquisitionDate];
+
+    await pool.query(query, queryParams);
+    res.json({ success: true, message: '자격증 정보가 성공적으로 저장되었습니다.' });
+  } catch (error) {
+    console.error('데이터베이스 오류:', error);
+    res.status(500).json({ success: false, message: '서버 오류가 발생했습니다.' });
+  }
+});
+
+// 자격증 정보 조회 API
+app.get('/api/get-certifications/:jobSeekerId', async (req, res) => {
+  const { jobSeekerId } = req.params;
+  
+  try {
+    const [countResult] = await pool.query(
+      'SELECT COUNT(*) as count FROM certifications WHERE jobSeeker_id = ?',
+      [jobSeekerId]
+    );
+    
+    const [certifications] = await pool.query(
+      'SELECT id, certification_name, issuing_organization, acquisition_date FROM certifications WHERE jobSeeker_id = ? ORDER BY acquisition_date DESC',
+      [jobSeekerId]
+    );
+    
+    if (certifications.length > 0) {
+      res.json({ 
+        success: true, 
+        count: countResult[0].count, 
+        certifications: certifications 
+      });
+    } else {
+      res.json({ success: false, message: '자격증 정보가 없습니다.' });
     }
   } catch (error) {
     console.error('데이터베이스 오류:', error);
