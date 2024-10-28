@@ -50,6 +50,7 @@ YEONSUNG_JOBFIND
 │   │   ├── components: 구직자 관련 재사용 가능한 컴포넌트
 │   │   ├── screens
 │   │   │   ├── profile
+│   │   │   │   ├── CertificationForm.tsx: 자격 및 면허 화면
 │   │   │   │   ├── ExperienceActivity.tsx: 경험/활동 정보 화면
 │   │   │   │   ├── GradInfo.tsx: 학력 정보 화면
 │   │   │   │   ├── JobSeekerProfileScreen.tsx: 구직자 프로필 메인 화면
@@ -89,6 +90,7 @@ YEONSUNG_JOBFIND
 - GradeInformation: 구직자 학력 정보
 - ExperienceActivity: 구직자 경험 및 활동 정보
 - PostJob: 구인 공고 정보
+- certifications: 자격 및 면허 
 
 ## 설치 및 실행 방법
 1. 저장소 클론:
