@@ -54,7 +54,7 @@ export interface GradInfoData {
   major: string;
 }
 
-// 자격 데이터 인터페이스 추가
+// 자격 이터 인터페이스 추가
 export interface CertificationData {
   certificationName: string;
   issuingOrganization: string;
@@ -281,7 +281,7 @@ export const validateGradInfo = (data: GradInfoData): ValidationResult => {
     return { isValid: false, message: '재학기간은 YYYY.MM 형식으로 입력해주세요.' };
   }
 
-  // 졸업여부 유효성 검사
+  // 졸업여부 유효성 사
   const graduationOptions = ['졸업', '재학중', '휴학중', '수료', '중퇴', '자퇴', '졸업예정'];
   if (!graduationOptions.includes(data.graduationStatus)) {
     return { isValid: false, message: '올바른 졸업여부를 선택해주세요.' };
@@ -348,9 +348,17 @@ export const validateExperienceActivity = (data: ExperienceActivityData): Valida
 
 // 날짜 포맷팅 함수 (YYYYMM -> YYYY-MM)
 export const formatExperienceDate = (input: string): string => {
+  // 숫자만 추출
   const numericValue = input.replace(/[^0-9]/g, '');
-  if (numericValue.length !== 6) return input;
-  return numericValue.slice(0, 4) + '-' + numericValue.slice(4, 6);
+  
+  // 6자리 미만이면 그대로 반환
+  if (numericValue.length < 6) return numericValue;
+  
+  // YYYY-MM 형식으로 변환
+  const year = numericValue.slice(0, 4);
+  const month = numericValue.slice(4, 6).padEnd(2, '0');
+  
+  return `${year}-${month}`;
 };
 
 // 날짜 유효성 검사 함수
@@ -388,6 +396,32 @@ export const validateCertification = (data: CertificationData): ValidationResult
   }
 
   return { isValid: true, message: '유효성 검사 통과' };
+};
+
+// 활동기록 번호 포맷팅 함수 추가
+export const formatActivityNumber = (input: string): string => {
+  // 하이픈 제거 및 숫자만 추출
+  const numericValue = input.replace(/[^0-9]/g, '');
+  
+  // 6자리로 제한
+  if (numericValue.length > 8) {
+    return input.slice(0, -1);
+  }
+  
+  // 4자리 이상일 때만 하이픈 추가
+  if (numericValue.length >= 4) {
+    const firstPart = numericValue.slice(0, 4);
+    const secondPart = numericValue.slice(4);
+    return `${firstPart}-${secondPart}`;
+  }
+  
+  return numericValue;
+};
+
+// 활동기록 번호 유효성 검사 함수 추가
+export const validateActivityNumber = (number: string): boolean => {
+  const numberRegex = /^\d{4}-\d{2}$/;
+  return numberRegex.test(number);
 };
 
 
