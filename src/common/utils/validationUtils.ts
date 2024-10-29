@@ -133,7 +133,7 @@ export const validateEmployer = async (
     return response.data;
   } catch (error) {
     console.error('API 요청 오류:', error);
-    return { isValid: false, message: '서버 오류가 발생했습니다. 나중에 다시 시도해주세요.' };
+    return { isValid: false, message: '서버 오류가 발생했습니다. 나중에 다시 시도해주��요.' };
   }
 
   return { isValid: true, message: '유효성 검사 통과' };
@@ -247,10 +247,19 @@ export const validateNormalInfo = (data: NormalInfoData): ValidationResult => {
   return { isValid: true, message: '유효성 검사 통과' };
 };
 
-export const formatDate = (input: string): string => {
-  const numericValue = input.replace(/[^0-9]/g, '');
-  if (numericValue.length <= 4) return numericValue;
-  return numericValue.slice(0, 4) + '.' + numericValue.slice(4, 6);
+export const formatDate = (dateString: string): string => {
+  // 이미 YYYY-MM-DD 형식이면 그대로 반환
+  if (/^\d{4}-\d{2}-\d{2}$/.test(dateString)) {
+    return dateString;
+  }
+
+  const date = new Date(dateString);
+  // 로컬 시간으로 변환
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  
+  return `${year}-${month}-${day}`;
 };
 
 export const validateDate = (date: string): boolean => {
