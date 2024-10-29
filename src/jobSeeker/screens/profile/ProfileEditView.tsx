@@ -23,7 +23,10 @@ type RootStackParamList = {
     mode: 'add' | 'edit'; 
     activity?: ActivityItem 
   };
-  CertificationForm: undefined;  // mode나 certification 파라미터가 필요 없음
+  CertificationForm: {
+    mode: 'add' | 'edit';
+    certification?: Certification;
+  };
 };
 
 const ProfileEditView = () => {
@@ -193,7 +196,14 @@ const ProfileEditView = () => {
   };
 
   const handleAddCertification = () => {
-    navigation.navigate('CertificationForm');  // 파라미터 없이 단순 네비게이션
+    navigation.navigate('CertificationForm', { mode: 'add' });
+  };
+
+  const handleEditCertification = (cert: Certification) => {
+    navigation.navigate('CertificationForm', {
+      mode: 'edit',
+      certification: cert
+    });
   };
 
   // 날짜 포맷팅 함수 추가
@@ -327,7 +337,10 @@ const ProfileEditView = () => {
             <View key={index} style={styles.certItem}>
               <View style={styles.certHeader}>
                 <Text style={styles.certName}>{cert.certification_name}</Text>
-                <TouchableOpacity style={styles.moreButton}>
+                <TouchableOpacity 
+                  style={styles.moreButton}
+                  onPress={() => handleEditCertification(cert)}
+                >
                   <Ionicons name="ellipsis-vertical" size={20} color="#666" />
                 </TouchableOpacity>
               </View>

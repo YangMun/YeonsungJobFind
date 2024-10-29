@@ -12,11 +12,12 @@ View,
   Modal
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useRoute } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useAuth } from '../../../context/AuthContext';
 import axios from 'axios';
 import { Calendar, LocaleConfig, DateData } from 'react-native-calendars';
+import { Certification } from '../../../common/utils/validationUtils';
 
 // 한국어 설정
 LocaleConfig.locales['kr'] = {
@@ -29,48 +30,53 @@ LocaleConfig.defaultLocale = 'kr';
 
 type RootStackParamList = {
   ProfileEditView: undefined;
+  CertificationForm: {
+    mode: 'add' | 'edit';
+    certification?: Certification;
+  };
 };
 
 type CertificationFormNavigationProp = NativeStackNavigationProp<
   RootStackParamList,
-  'ProfileEditView'
+  'CertificationForm'
 >;
 
 const CertificationForm = () => {
   const navigation = useNavigation<CertificationFormNavigationProp>();
+  const route = useRoute();
+  const { mode, certification } = route.params as { 
+    mode: 'add' | 'edit';
+    certification?: Certification;
+  };
   const { userId } = useAuth();
-  const [certificationName, setCertificationName] = useState('');
-  const [issuingOrganization, setIssuingOrganization] = useState('');
-  const [date, setDate] = useState(new Date());
-  const [showPicker, setShowPicker] = useState(false);
-  const [dateText, setDateText] = useState('');
-  const [showCalendar, setShowCalendar] = useState(false);
 
+  // formatDate 함수를 useState 선언 전에 정의
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
     const year = date.getFullYear();
     const month = String(date.getMonth() + 1).padStart(2, '0');
     const day = String(date.getDate()).padStart(2, '0');
-    return `${year}-${month}-${day}`; // '.' 대신 '-' 사용
+    return `${year}-${month}-${day}`;
   };
 
-  const onChange = (event: any, selectedDate?: Date) => {
-    setShowPicker(Platform.OS === 'ios');
-    if (selectedDate) {
-      setDate(selectedDate);
-      const formattedDate = formatDate(selectedDate.toISOString());
-      setDateText(formattedDate);
-    }
-  };
+  // 초기값 설정
+  const [certificationName, setCertificationName] = useState(
+    certification?.certification_name || ''
+  );
+  const [issuingOrganization, setIssuingOrganization] = useState(
+    certification?.issuing_organization || ''
+  );
+  const [dateText, setDateText] = useState(
+    certification?.acquisition_date || ''
+  );
+  const [showCalendar, setShowCalendar] = useState(false);
 
   const handleDateSelect = (day: DateData) => {
-    const selectedDate = day.dateString;
-    setDateText(formatDate(selectedDate));
+    setDateText(day.dateString);
     setShowCalendar(false);
   };
 
   const handleSubmit = async () => {
-    // 입력값 검증
     if (!certificationName || !issuingOrganization || !dateText) {
       Alert.alert('오류', '모든 필드를 입력해주세요.');
       return;
@@ -83,15 +89,22 @@ const CertificationForm = () => {
         default: 'http://localhost:3000'
       });
 
-      const response = await axios.post(`${baseURL}/api/save-certification`, {
+      const endpoint = mode === 'add' 
+        ? '/api/save-certification'
+        : '/api/update-certification';
+
+      const payload = {
         jobSeekerId: userId,
         certificationName,
         issuingOrganization,
-        acquisitionDate: dateText
-      });
+        acquisitionDate: dateText,
+        ...(mode === 'edit' && { certificationId: certification?.id })
+      };
+
+      const response = await axios.post(`${baseURL}${endpoint}`, payload);
 
       if (response.data.success) {
-        Alert.alert('성공', '자격증 정보가 저장되었습니다.', [
+        Alert.alert('성공', `자격증 정보가 ${mode === 'add' ? '저장' : '수정'}되었습니다.`, [
           {
             text: '확인',
             onPress: () => navigation.goBack()
@@ -106,13 +119,63 @@ const CertificationForm = () => {
     }
   };
 
+  // 삭제 핸들러 추가
+  const handleDelete = async () => {
+    try {
+      const baseURL = Platform.select({
+        ios: 'http://localhost:3000',
+        android: 'http://10.0.2.2:3000',
+        default: 'http://localhost:3000'
+      });
+
+      Alert.alert(
+        '삭제 확인',
+        '정말로 이 자격증을 삭제하시겠습니까?',
+        [
+          {
+            text: '취소',
+            style: 'cancel'
+          },
+          {
+            text: '삭제',
+            style: 'destructive',
+            onPress: async () => {
+              try {
+                const response = await axios.delete(
+                  `${baseURL}/api/delete-certification/${certification?.id}/${userId}`
+                );
+
+                if (response.data.success) {
+                  Alert.alert('성공', '자격증이 삭제되었습니다.', [
+                    {
+                      text: '확인',
+                      onPress: () => navigation.goBack()
+                    }
+                  ]);
+                }
+              } catch (error) {
+                console.error('API 요청 오류:', error);
+                Alert.alert('오류', '삭제 중 오류가 발생했습니다.');
+              }
+            }
+          }
+        ]
+      );
+    } catch (error) {
+      console.error('삭제 처리 오류:', error);
+      Alert.alert('오류', '삭제 처리 중 오류가 발생했습니다.');
+    }
+  };
+
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
         <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
           <Ionicons name="chevron-back" size={24} color="#000" />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>자격증 추가</Text>
+        <Text style={styles.headerTitle}>
+          {mode === 'add' ? '자격증 추가' : '자격증 수정'}
+        </Text>
       </View>
 
       <View style={styles.mainContainer}>
@@ -159,7 +222,7 @@ const CertificationForm = () => {
               maxDate={new Date().toISOString().split('T')[0]}
               monthFormat={'yyyy년 MM월'}
               markedDates={{
-                [dateText.replace(/\./g, '-')]: {selected: true, selectedColor: '#4a90e2'}
+                [dateText]: {selected: true, selectedColor: '#4a90e2'}
               }}
               theme={{
                 selectedDayBackgroundColor: '#4a90e2',
@@ -175,11 +238,25 @@ const CertificationForm = () => {
         </ScrollView>
 
         <View style={styles.footer}>
-          <TouchableOpacity style={styles.cancelButton} onPress={() => navigation.goBack()}>
-            <Text style={styles.cancelButtonText}>취소</Text>
-          </TouchableOpacity>
+          {mode === 'edit' ? (
+            <TouchableOpacity 
+              style={[styles.cancelButton, styles.deleteButton]} 
+              onPress={handleDelete}
+            >
+              <Text style={[styles.cancelButtonText, styles.deleteButtonText]}>삭제</Text>
+            </TouchableOpacity>
+          ) : (
+            <TouchableOpacity 
+              style={styles.cancelButton} 
+              onPress={() => navigation.goBack()}
+            >
+              <Text style={styles.cancelButtonText}>취소</Text>
+            </TouchableOpacity>
+          )}
           <TouchableOpacity style={styles.submitButton} onPress={handleSubmit}>
-            <Text style={styles.submitButtonText}>추가</Text>
+            <Text style={styles.submitButtonText}>
+              {mode === 'add' ? '추가' : '수정'}
+            </Text>
           </TouchableOpacity>
         </View>
       </View>
@@ -277,6 +354,12 @@ const styles = StyleSheet.create({
   },
   placeholderText: {
     color: '#999',
+  },
+  deleteButton: {
+    backgroundColor: '#ff4444',
+  },
+  deleteButtonText: {
+    color: 'white',
   },
 });
 
