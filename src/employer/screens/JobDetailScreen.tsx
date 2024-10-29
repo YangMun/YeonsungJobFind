@@ -5,11 +5,9 @@ import { StackNavigationProp } from '@react-navigation/stack';
 import axios from 'axios';
 import { Ionicons } from '@expo/vector-icons';
 import { Alert } from 'react-native';
-import { RootStackParamList } from '../../navigation/AppNavigator';  // 이 줄을 추가하세요
+import { RootStackParamList } from '../../navigation/AppNavigator';
+import { API_URL } from '../../common/utils/validationUtils';
 
-const API_BASE_URL = Platform.OS === 'android' 
-  ? 'http://10.0.2.2:3000' 
-  : 'http://localhost:3000';
 
 type JobDetailScreenRouteProp = RouteProp<RootStackParamList, 'EmployerJobDetail'>;
 type JobDetailScreenNavigationProp = StackNavigationProp<RootStackParamList, 'EmployerJobDetail'>;
@@ -42,7 +40,7 @@ const JobDetailScreen: React.FC<Props> = ({ route, navigation }) => {
   useEffect(() => {
     const fetchJobDetail = async () => {
       try {
-        const response = await axios.get(`${API_BASE_URL}/api/job-detail/${jobId}`);
+        const response = await axios.get(`${API_URL}/api/job-detail/${jobId}`);
         if (response.data.success) {
           setJobDetail(response.data.job);
         }
@@ -88,7 +86,7 @@ const JobDetailScreen: React.FC<Props> = ({ route, navigation }) => {
 
   const deleteJob = async () => {
     try {
-      const response = await axios.delete(`${API_BASE_URL}/api/delete-job/${jobId}`);
+      const response = await axios.delete(`${API_URL}/api/delete-job/${jobId}`);
       if (response.data.success) {
         Alert.alert("삭제 완료", "공고가 성공적으로 삭제되었습니다.");
         navigation.goBack();

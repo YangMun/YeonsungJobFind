@@ -3,6 +3,9 @@ import { View, Text, StyleSheet, SafeAreaView, TouchableOpacity, TextInput, Scro
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { useAuth } from '../../../context/AuthContext';
+import axios from 'axios';
+import { API_URL } from '../../../common/utils/validationUtils';
 
 type RootStackParamList = {
   ProfileEditView: { updatedCareerText: string } | undefined;
@@ -11,26 +14,101 @@ type RootStackParamList = {
 
 type MyCareerEditViewRouteProp = RouteProp<RootStackParamList, 'MyCareerEditView'>;
 
+type CareerSection = {
+  title: string;
+  text: string;
+};
+
 const MyCareerEditView = () => {
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const route = useRoute<MyCareerEditViewRouteProp>();
-  const [careerText, setCareerText] = useState(route.params?.initialCareerText || '');
+  const { userId } = useAuth();
+  const [careerSections, setCareerSections] = useState<CareerSection[]>([
+    { title: "성장과정", text: "" },
+    { title: "성격(장단점)", text: "" },
+    { title: "지원동기", text: "" },
+    { title: "입사 후 포부", text: "" },
+    { title: "경력사항", text: "" },
+  ]);
   const [isDeleteDisabled, setIsDeleteDisabled] = useState(true);
 
   useEffect(() => {
-    setIsDeleteDisabled(careerText.trim().length === 0);
-  }, [careerText]);
+    if (route.params?.initialCareerText) {
+      const sections = route.params.initialCareerText.split('\n\n');
+      const updatedSections = [...careerSections];
+      
+      sections.forEach(section => {
+        const match = section.match(/\[(.*?)\]\n(.*)/s);
+        if (match) {
+          const [, title, content] = match;
+          const index = careerSections.findIndex(s => s.title === title);
+          if (index !== -1) {
+            updatedSections[index].text = content;
+          }
+        }
+      });
+      
+      setCareerSections(updatedSections);
+    }
+  }, []);
 
-  const handleSave = () => {
-    navigation.navigate('ProfileEditView', { updatedCareerText: careerText });
+  useEffect(() => {
+    const isEmpty = careerSections.every(section => section.text.trim().length === 0);
+    setIsDeleteDisabled(isEmpty);
+  }, [careerSections]);
+
+  const handleSave = async () => {
+    try {
+      const endpoint = route.params?.initialCareerText 
+        ? `${API_URL}/api/update-career-statement/${userId}`
+        : `${API_URL}/api/save-career-statement`;
+      
+      const method = route.params?.initialCareerText ? 'put' : 'post';
+      
+      const response = await axios({
+        method,
+        url: endpoint,
+        data: {
+          jobSeekerId: userId,
+          growthProcess: careerSections[0].text,
+          personality: careerSections[1].text,
+          motivation: careerSections[2].text,
+          aspiration: careerSections[3].text,
+          careerHistory: careerSections[4].text
+        }
+      });
+
+      if (response.data.success) {
+        Alert.alert(
+          route.params?.initialCareerText ? '수정 완료' : '저장 완료',
+          route.params?.initialCareerText ? '자기소개서가 수정되었습니다.' : '자기소개서가 저장되었습니다.',
+          [
+            {
+              text: '확인',
+              onPress: () => {
+                const combinedText = careerSections
+                  .map(section => `[${section.title}]\n${section.text}`)
+                  .join('\n\n');
+                navigation.navigate('ProfileEditView', { updatedCareerText: combinedText });
+              }
+            }
+          ]
+        );
+      } else {
+        Alert.alert('저장 실패', response.data.message);
+      }
+    } catch (error) {
+      console.error('API 오류:', error);
+      Alert.alert('오류', '자기소개서 저장 중 오류가 발생했습니다.');
+    }
   };
 
-  const handleDelete = () => {
+  const handleDelete = async () => {
     if (isDeleteDisabled) return;
 
     Alert.alert(
       "삭제 확인",
-      "정말로 내용을 삭제하시겠습니까?",
+      "정말로 모든 내용을 삭제하시겠습니까?",
       [
         {
           text: "취소",
@@ -38,13 +116,37 @@ const MyCareerEditView = () => {
         },
         { 
           text: "삭제", 
-          onPress: () => {
-            setCareerText('');
-            navigation.navigate('ProfileEditView', { updatedCareerText: '' });
+          onPress: async () => {
+            try {
+              const response = await axios.delete(`${API_URL}/api/delete-career-statement/${userId}`);
+              
+              if (response.data.success) {
+                const clearedSections = careerSections.map(section => ({
+                  ...section,
+                  text: ""
+                }));
+                setCareerSections(clearedSections);
+                navigation.navigate('ProfileEditView', { updatedCareerText: '' });
+              } else {
+                Alert.alert('삭제 실패', response.data.message);
+              }
+            } catch (error) {
+              console.error('API 오류:', error);
+              Alert.alert('오류', '자기소개서 삭제 중 오류가 발생했습니다.');
+            }
           }
         }
       ]
     );
+  };
+
+  const updateSectionText = (index: number, newText: string) => {
+    const updatedSections = [...careerSections];
+    updatedSections[index] = {
+      ...updatedSections[index],
+      text: newText
+    };
+    setCareerSections(updatedSections);
   };
 
   return (
@@ -53,38 +155,53 @@ const MyCareerEditView = () => {
         <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
           <Ionicons name="chevron-back" size={24} color="#000" />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>My career</Text>
+        <Text style={styles.headerTitle}>자기소개서</Text>
         <View style={styles.placeholder} />
       </View>
       <ScrollView style={styles.content}>
-        <Text style={styles.subtitle}>커리어 소개와 핵심역량을 입력해보세요</Text>
-        <TextInput
-          style={styles.careerInput}
-          multiline
-          placeholder="커리어 정보 입력"
-          value={careerText}
-          onChangeText={setCareerText}
-        />
-        <Text style={styles.characterCount}>{careerText.length}/270자</Text>
+        {careerSections.map((section, index) => (
+          <View key={index} style={styles.sectionContainer}>
+            <Text style={styles.sectionTitle}>{section.title}</Text>
+            <TextInput
+              style={styles.careerInput}
+              multiline
+              placeholder={`${section.title}을(를) 입력하세요`}
+              value={section.text}
+              onChangeText={(text) => updateSectionText(index, text)}
+            />
+            <Text style={styles.characterCount}>{section.text.length}/500자</Text>
+          </View>
+        ))}
       </ScrollView>
       <View style={styles.footer}>
+        {route.params?.initialCareerText && (
+          <TouchableOpacity 
+            style={[
+              styles.footerButton, 
+              styles.deleteButton,
+              isDeleteDisabled && styles.disabledButton
+            ]} 
+            onPress={handleDelete}
+            disabled={isDeleteDisabled}
+          >
+            <Text style={[
+              styles.footerButtonText, 
+              styles.deleteButtonText,
+              isDeleteDisabled && styles.disabledButtonText
+            ]}>삭제</Text>
+          </TouchableOpacity>
+        )}
         <TouchableOpacity 
           style={[
             styles.footerButton, 
-            styles.deleteButton,
-            isDeleteDisabled && styles.disabledButton
+            styles.saveButton,
+            !route.params?.initialCareerText && styles.fullWidthButton
           ]} 
-          onPress={handleDelete}
-          disabled={isDeleteDisabled}
+          onPress={handleSave}
         >
-          <Text style={[
-            styles.footerButtonText, 
-            styles.deleteButtonText,
-            isDeleteDisabled && styles.disabledButtonText
-          ]}>삭제</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={[styles.footerButton, styles.saveButton]} onPress={handleSave}>
-          <Text style={[styles.footerButtonText, styles.saveButtonText]}>작성완료</Text>
+          <Text style={[styles.footerButtonText, styles.saveButtonText]}>
+            {route.params?.initialCareerText ? '수정하기' : '작성완료'}
+          </Text>
         </TouchableOpacity>
       </View>
     </SafeAreaView>
@@ -174,6 +291,18 @@ const styles = StyleSheet.create({
   },
   disabledButtonText: {
     color: '#a0a0a0',
+  },
+  sectionContainer: {
+    marginBottom: 24,
+  },
+  sectionTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#333',
+    marginBottom: 8,
+  },
+  fullWidthButton: {
+    flex: 2,
   },
 });
 

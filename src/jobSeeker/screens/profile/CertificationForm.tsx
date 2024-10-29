@@ -17,7 +17,7 @@ import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useAuth } from '../../../context/AuthContext';
 import axios from 'axios';
 import { Calendar, LocaleConfig, DateData } from 'react-native-calendars';
-import { Certification } from '../../../common/utils/validationUtils';
+import { Certification, API_URL } from '../../../common/utils/validationUtils';
 
 // 한국어 설정
 LocaleConfig.locales['kr'] = {
@@ -83,12 +83,6 @@ const CertificationForm = () => {
     }
 
     try {
-      const baseURL = Platform.select({
-        ios: 'http://localhost:3000',
-        android: 'http://10.0.2.2:3000',
-        default: 'http://localhost:3000'
-      });
-
       const endpoint = mode === 'add' 
         ? '/api/save-certification'
         : '/api/update-certification';
@@ -101,7 +95,7 @@ const CertificationForm = () => {
         ...(mode === 'edit' && { certificationId: certification?.id })
       };
 
-      const response = await axios.post(`${baseURL}${endpoint}`, payload);
+      const response = await axios.post(`${API_URL}${endpoint}`, payload);
 
       if (response.data.success) {
         Alert.alert('성공', `자격증 정보가 ${mode === 'add' ? '저장' : '수정'}되었습니다.`, [
@@ -122,12 +116,6 @@ const CertificationForm = () => {
   // 삭제 핸들러 추가
   const handleDelete = async () => {
     try {
-      const baseURL = Platform.select({
-        ios: 'http://localhost:3000',
-        android: 'http://10.0.2.2:3000',
-        default: 'http://localhost:3000'
-      });
-
       Alert.alert(
         '삭제 확인',
         '정말로 이 자격증을 삭제하시겠습니까?',
@@ -142,7 +130,7 @@ const CertificationForm = () => {
             onPress: async () => {
               try {
                 const response = await axios.delete(
-                  `${baseURL}/api/delete-certification/${certification?.id}/${userId}`
+                  `${API_URL}/api/delete-certification/${certification?.id}/${userId}`
                 );
 
                 if (response.data.success) {

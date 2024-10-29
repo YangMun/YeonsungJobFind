@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { View, Text, StyleSheet, ScrollView, TextInput, TouchableOpacity, Alert, SafeAreaView, Platform } from 'react-native';
 import { Calendar, LocaleConfig, DateData } from 'react-native-calendars';
-import { validatePostJob } from '../../common/utils/validationUtils';
+import { validatePostJob, API_URL } from '../../common/utils/validationUtils';
 import axios from 'axios';
 import { RouteProp } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
@@ -16,10 +16,6 @@ type Props = {
   route: EditJobScreenRouteProp;
   navigation: EditJobScreenNavigationProp;
 };
-
-const API_BASE_URL = Platform.OS === 'android' 
-  ? 'http://10.0.2.2:3000' 
-  : 'http://localhost:3000';
 
 const EditJobScreen: React.FC<Props> = ({ route, navigation }) => {
   const { jobId } = route.params;
@@ -61,7 +57,7 @@ const EditJobScreen: React.FC<Props> = ({ route, navigation }) => {
   useEffect(() => {
     const fetchJobDetail = async () => {
       try {
-        const response = await axios.get(`${API_BASE_URL}/api/job-detail/${jobId}`);
+        const response = await axios.get(`${API_URL}/api/job-detail/${jobId}`);
         if (response.data.success) {
           const job = response.data.job;
           setTitle(job.title);
@@ -122,7 +118,7 @@ const EditJobScreen: React.FC<Props> = ({ route, navigation }) => {
 
     if (validationResult.isValid) {
       try {
-        const response = await axios.put(`${API_BASE_URL}/api/update-job/${jobId}`, editJobData);
+        const response = await axios.put(`${API_URL}/api/update-job/${jobId}`, editJobData);
         if (response.data.success) {
           Alert.alert('성공', '구인 공고가 성공적으로 수정되었습니다.');
           navigation.goBack();
