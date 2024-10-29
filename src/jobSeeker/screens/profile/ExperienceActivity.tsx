@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, SafeAreaView, TouchableOpacity, TextInput, ScrollView, Modal, Alert } from 'react-native';
+import { View, Text, StyleSheet, SafeAreaView, TouchableOpacity, TextInput, ScrollView, Modal, Alert, Platform} from 'react-native';
 import { Ionicons, MaterialIcons } from '@expo/vector-icons';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -194,7 +194,7 @@ const ExperienceActivityEducationForm = () => {
             onChangeText={handleStartDateChange}
             placeholder="YYYYMM"
             keyboardType="numeric"
-            maxLength={6}
+            maxLength={7}
           />
           <Text style={styles.dateSeparator}>~</Text>
           <TextInput
@@ -203,7 +203,7 @@ const ExperienceActivityEducationForm = () => {
             onChangeText={handleEndDateChange}
             placeholder="YYYYMM"
             keyboardType="numeric"
-            maxLength={6}
+            maxLength={7}
           />
         </View>
 
