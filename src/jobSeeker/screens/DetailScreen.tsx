@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, SafeAreaView, StatusBar } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, SafeAreaView, StatusBar, Platform } from 'react-native';
 import { RouteProp } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import axios from 'axios';
@@ -29,6 +29,10 @@ interface JobDetail {
   contact_number: string;
 }
 
+const API_BASE_URL = Platform.OS === 'android' 
+  ? 'http://10.0.2.2:3000' 
+  : 'http://localhost:3000';
+
 const DetailScreen: React.FC<Props> = ({ route, navigation }) => {
   const { jobId } = route.params;
   const [jobDetail, setJobDetail] = useState<JobDetail | null>(null);
@@ -37,7 +41,12 @@ const DetailScreen: React.FC<Props> = ({ route, navigation }) => {
   useEffect(() => {
     const fetchJobDetail = async () => {
       try {
-        const response = await axios.get(`http://localhost:3000/api/job-detail/${jobId}`);
+        const baseURL = Platform.select({
+          ios: 'http://localhost:3000',
+          android: 'http://10.0.2.2:3000',
+          default: 'http://localhost:3000'
+        });
+        const response = await axios.get(`${baseURL}/api/job-detail/${jobId}`);
         if (response.data.success) {
           setJobDetail(response.data.job);
         }

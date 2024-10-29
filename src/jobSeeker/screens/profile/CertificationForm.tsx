@@ -77,7 +77,13 @@ const CertificationForm = () => {
     }
 
     try {
-      const response = await axios.post('http://localhost:3000/api/save-certification', {
+      const baseURL = Platform.select({
+        ios: 'http://localhost:3000',
+        android: 'http://10.0.2.2:3000',
+        default: 'http://localhost:3000'
+      });
+
+      const response = await axios.post(`${baseURL}/api/save-certification`, {
         jobSeekerId: userId,
         certificationName,
         issuingOrganization,
