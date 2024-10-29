@@ -6,12 +6,16 @@
  */
 
 import React, { useState, useCallback } from 'react';
-import { View, StyleSheet, FlatList, TouchableOpacity, Text, SafeAreaView, RefreshControl } from 'react-native';
+import { View, StyleSheet, FlatList, TouchableOpacity, Text, SafeAreaView, RefreshControl, Platform } from 'react-native';
 import axios from 'axios';
 import { useAuth } from '../../context/AuthContext'; // AuthContext import 추가
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { RootStackParamList } from '../../navigation/AppNavigator';
+
+const API_BASE_URL = Platform.OS === 'android' 
+  ? 'http://10.0.2.2:3000' 
+  : 'http://localhost:3000';
 
 interface Job {
   id: number;
@@ -34,7 +38,7 @@ const JobListScreen: React.FC = () => {
   const fetchJobs = useCallback(async () => {
     if (!userId) return; // userId가 없으면 함수 종료
     try {
-      const response = await axios.get(`http://localhost:3000/api/job-list/${userId}?status=${activeTab}`);
+      const response = await axios.get(`${API_BASE_URL}/api/job-list/${userId}?status=${activeTab}`);
       if (response.data.success) {
         setJobs(response.data.jobs);
       }

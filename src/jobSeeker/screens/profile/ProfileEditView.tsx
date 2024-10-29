@@ -55,10 +55,16 @@ const ProfileEditView = () => {
     if (!userId) return;
 
     try {
-      const response = await axios.get(`http://localhost:3000/api/jobseeker-profile-summary/${userId}`);
+      const baseURL = Platform.select({
+        ios: 'http://localhost:3000',
+        android: 'http://10.0.2.2:3000',
+        default: 'http://localhost:3000'
+      });
+
+      const response = await axios.get(`${baseURL}/api/jobseeker-profile-summary/${userId}`);
       if (response.data.success) {
         setProfileName(response.data.profile.name || '이름 없음');
-        setProfileImage(response.data.profile.image ? `http://localhost:3000/uploads/${response.data.profile.image}` : null);
+        setProfileImage(response.data.profile.image ? `${baseURL}/uploads/${response.data.profile.image}` : null);
       }
     } catch (error) {
       console.error('프로필 요약 정보 조회 오류:', error);
@@ -69,7 +75,13 @@ const ProfileEditView = () => {
     if (!userId) return;
 
     try {
-      const response = await axios.get(`http://localhost:3000/api/get-education-info/${userId}`);
+      const baseURL = Platform.select({
+        ios: 'http://localhost:3000',
+        android: 'http://10.0.2.2:3000',
+        default: 'http://localhost:3000'
+      });
+
+      const response = await axios.get(`${baseURL}/api/get-education-info/${userId}`);
       if (response.data.success) {
         const { university_type, graduation_status, school_name, admission_date, graduation_date } = response.data.info;
         setEducationSummary(`${university_type} ${graduation_status}`);
@@ -90,7 +102,13 @@ const ProfileEditView = () => {
     if (!userId) return;
 
     try {
-      const response = await axios.get(`http://localhost:3000/api/get-experience-activities/${userId}`);
+      const baseURL = Platform.select({
+        ios: 'http://localhost:3000',
+        android: 'http://10.0.2.2:3000',
+        default: 'http://localhost:3000'
+      });
+
+      const response = await axios.get(`${baseURL}/api/get-experience-activities/${userId}`);
       if (response.data.success) {
         setExperienceActivities(response.data.activities);
         setActivityCount(response.data.count);
@@ -104,7 +122,13 @@ const ProfileEditView = () => {
     if (!userId) return;
 
     try {
-      const response = await axios.get(`http://localhost:3000/api/get-certifications/${userId}`);
+      const baseURL = Platform.select({
+        ios: 'http://localhost:3000',
+        android: 'http://10.0.2.2:3000',
+        default: 'http://localhost:3000'
+      });
+
+      const response = await axios.get(`${baseURL}/api/get-certifications/${userId}`);
       if (response.data.success) {
         setCertifications(response.data.certifications);
         setCertificationCount(response.data.count);

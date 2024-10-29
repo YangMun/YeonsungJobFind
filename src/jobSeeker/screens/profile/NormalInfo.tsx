@@ -25,7 +25,13 @@ const NormalInfo = () => {
 
   const fetchNormalInfo = async () => {
     try {
-      const response = await axios.get(`http://localhost:3000/api/get-normal-info/${userId}`);
+      const baseURL = Platform.select({
+        ios: 'http://localhost:3000',
+        android: 'http://10.0.2.2:3000',
+        default: 'http://localhost:3000'
+      });
+
+      const response = await axios.get(`${baseURL}/api/get-normal-info/${userId}`);
       if (response.data.success) {
         const info = response.data.info;
         setName(info.name);
@@ -33,7 +39,7 @@ const NormalInfo = () => {
         setEmail(info.email);
         setPhone(info.phone.replace(/-/g, '')); // 하이픈 제거
         setGender(info.gender);
-        setProfileImage(info.image ? `http://localhost:3000/uploads/${info.image}` : null);
+        setProfileImage(info.image ? `${baseURL}/uploads/${info.image}` : null);
       }
     } catch (error) {
       console.error('기본 정보 조회 오류:', error);
@@ -80,6 +86,12 @@ const NormalInfo = () => {
     }
 
     try {
+      const baseURL = Platform.select({
+        ios: 'http://localhost:3000',
+        android: 'http://10.0.2.2:3000',
+        default: 'http://localhost:3000'
+      });
+
       const formData = new FormData();
       formData.append('jobSeekerId', userId.toString());
       formData.append('name', name);
@@ -98,7 +110,7 @@ const NormalInfo = () => {
         } as any);
       }
 
-      const response = await axios.post('http://localhost:3000/api/save-normal-info', formData, {
+      const response = await axios.post(`${baseURL}/api/save-normal-info`, formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
         },

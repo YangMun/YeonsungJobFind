@@ -1,5 +1,5 @@
 import React, { useState, useCallback, useEffect } from 'react';
-import { View, StyleSheet, FlatList, TouchableOpacity, Text, SafeAreaView, RefreshControl, Modal, TouchableWithoutFeedback } from 'react-native';
+import { View, StyleSheet, FlatList, TouchableOpacity, Text, SafeAreaView, RefreshControl, Modal, TouchableWithoutFeedback, Platform } from 'react-native';
 import axios from 'axios';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
@@ -37,8 +37,13 @@ const HomeScreen: React.FC = () => {
 
   const fetchJobs = useCallback(async () => {
     try {
+      const baseURL = Platform.select({
+        ios: 'http://localhost:3000',
+        android: 'http://10.0.2.2:3000',
+        default: 'http://localhost:3000'
+      });
       const departments = selectedDepartments.join(',');
-      const response = await axios.get(`http://localhost:3000/api/all-jobs?status=${activeTab}&departments=${departments}`);
+      const response = await axios.get(`${baseURL}/api/all-jobs?status=${activeTab}&departments=${departments}`);
       if (response.data.success) {
         setJobs(response.data.jobs);
       }
@@ -95,7 +100,12 @@ const HomeScreen: React.FC = () => {
 
   const fetchDepartments = useCallback(async () => {
     try {
-      const response = await axios.get('http://localhost:3000/api/departments');
+      const baseURL = Platform.select({
+        ios: 'http://localhost:3000',
+        android: 'http://10.0.2.2:3000',
+        default: 'http://localhost:3000'
+      });
+      const response = await axios.get(`${baseURL}/api/departments`);
       if (response.data.success) {
         setDepartments(response.data.departments);
       }
