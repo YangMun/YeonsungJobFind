@@ -3,7 +3,7 @@ import { View, Text, StyleSheet, SafeAreaView, TouchableOpacity, TextInput, Imag
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import { pickImage } from '../../../common/utils/imagePickerUtils';
-import { validateNormalInfo } from '../../../common/utils/validationUtils';
+import { validateNormalInfo, API_URL } from '../../../common/utils/validationUtils';
 import axios from 'axios';
 import { useAuth } from '../../../context/AuthContext';
 
@@ -25,13 +25,7 @@ const NormalInfo = () => {
 
   const fetchNormalInfo = async () => {
     try {
-      const baseURL = Platform.select({
-        ios: 'http://localhost:3000',
-        android: 'http://10.0.2.2:3000',
-        default: 'http://localhost:3000'
-      });
-
-      const response = await axios.get(`${baseURL}/api/get-normal-info/${userId}`);
+      const response = await axios.get(`${API_URL}/api/get-normal-info/${userId}`);
       if (response.data.success) {
         const info = response.data.info;
         setName(info.name);
@@ -39,7 +33,7 @@ const NormalInfo = () => {
         setEmail(info.email);
         setPhone(info.phone.replace(/-/g, '')); // 하이픈 제거
         setGender(info.gender);
-        setProfileImage(info.image ? `${baseURL}/uploads/${info.image}` : null);
+        setProfileImage(info.image ? `${API_URL}/api/uploads/${info.image}` : null);
       }
     } catch (error) {
       console.error('기본 정보 조회 오류:', error);
@@ -86,12 +80,6 @@ const NormalInfo = () => {
     }
 
     try {
-      const baseURL = Platform.select({
-        ios: 'http://localhost:3000',
-        android: 'http://10.0.2.2:3000',
-        default: 'http://localhost:3000'
-      });
-
       const formData = new FormData();
       formData.append('jobSeekerId', userId.toString());
       formData.append('name', name);
@@ -110,7 +98,7 @@ const NormalInfo = () => {
         } as any);
       }
 
-      const response = await axios.post(`${baseURL}/api/save-normal-info`, formData, {
+      const response = await axios.post(`${API_URL}/api/save-normal-info`, formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
         },

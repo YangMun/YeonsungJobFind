@@ -5,7 +5,7 @@ import { useNavigation, useRoute } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useAuth } from '../../../context/AuthContext';
 import axios from 'axios';
-import { formatExperienceDate, ActivityItem, validateExperienceActivity, ExperienceActivityData } from '../../../common/utils/validationUtils';
+import { formatExperienceDate, ActivityItem, API_URL } from '../../../common/utils/validationUtils';
 
 type RootStackParamList = {
   ProfileEditView: undefined;
@@ -66,14 +66,9 @@ const ExperienceActivityEducationForm = () => {
     }
 
     try {
-      const baseURL = Platform.select({
-        ios: 'http://localhost:3000',
-        android: 'http://10.0.2.2:3000',
-        default: 'http://localhost:3000'
-      });
       let response;
       if (mode === 'add') {
-        response = await axios.post(`${baseURL}/api/save-experience-activity`, {
+        response = await axios.post(`${API_URL}/api/save-experience-activity`, {
           jobSeekerId: userId,
           activityType,
           organization,
@@ -82,7 +77,7 @@ const ExperienceActivityEducationForm = () => {
           description
         });
       } else {
-        response = await axios.put(`${baseURL}/api/update-experience-activity/${activityId}`, {
+        response = await axios.put(`${API_URL}/api/update-experience-activity/${activityId}`, {
           jobSeekerId: userId,
           activityType,
           organization,
@@ -116,11 +111,6 @@ const ExperienceActivityEducationForm = () => {
 
   const handleDelete = async () => {
     try {
-      const baseURL = Platform.select({
-        ios: 'http://localhost:3000',
-        android: 'http://10.0.2.2:3000',
-        default: 'http://localhost:3000'
-      });
 
       Alert.alert(
         '삭제 확인',
@@ -135,7 +125,7 @@ const ExperienceActivityEducationForm = () => {
             style: 'destructive',
             onPress: async () => {
               const response = await axios.delete(
-                `${baseURL}/api/delete-experience-activity/${activityId}/${userId}`
+                `${API_URL}/api/delete-experience-activity/${activityId}/${userId}`
               );
               if (response.data.success) {
                 Alert.alert('성공', '활동이 삭제되었습니다.');

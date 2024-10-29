@@ -91,6 +91,7 @@ YEONSUNG_JOBFIND
 - ExperienceActivity: 구직자 경험 및 활동 정보
 - PostJob: 구인 공고 정보
 - certifications: 자격 및 면허 
+- career_statements: 자기소개서 정보 
 
 ## 설치 및 실행 방법
 1. 저장소 클론:

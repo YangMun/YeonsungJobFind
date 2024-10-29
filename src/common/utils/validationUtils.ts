@@ -1,10 +1,10 @@
 import axios from 'axios';
 import { Platform } from 'react-native';
 
-const API_URL = Platform.select({
-  ios: 'http://localhost:3000/api',
-  android: 'http://10.0.2.2:3000/api',
-  default: 'http://localhost:3000/api', // 웹이나 다른 플랫폼을 위한 기본값
+export const API_URL = Platform.select({
+  ios: 'http://localhost:3000',
+  android: 'http://10.0.2.2:3000',
+  default: 'http://localhost:3000'
 });
 
 interface ValidationResult {
@@ -69,6 +69,21 @@ export interface Certification {
   acquisition_date: string;
 }
 
+// 자기소개서 섹션 인터페이스 추가
+export interface CareerSectionData {
+  title: string;
+  text: string;
+}
+
+// CareerStatement 인터페이스 추가
+export interface CareerStatement {
+  growth_process: string;
+  personality: string;
+  motivation: string;
+  aspiration: string;
+  career_history: string;
+}
+
 export const validateJobSeeker = async (
   studentId: string,
   email: string,
@@ -98,7 +113,7 @@ export const validateJobSeeker = async (
 
   // DB에 이미 존재하는 학번 또는 이메일인지 확인
   try {
-    const response = await axios.post(`${API_URL}/validate-jobseeker`, { studentId, email });
+    const response = await axios.post(`${API_URL}/api/validate-jobseeker`, { studentId, email });
     return response.data;
   } catch (error) {
     console.error('API 요청 오류:', error);
@@ -129,11 +144,11 @@ export const validateEmployer = async (
 
   // DB에 이미 존재하는 아이디인지 확인
   try {
-    const response = await axios.post(`${API_URL}/validate-employer`, { id });
+    const response = await axios.post(`${API_URL}/api/validate-employer`, { id });
     return response.data;
   } catch (error) {
     console.error('API 요청 오류:', error);
-    return { isValid: false, message: '서버 오류가 발생했습니다. 나중에 다시 시도해주��요.' };
+    return { isValid: false, message: '서버 오류가 발생했습니다. 나중에 다시 시도해주세요.' };
   }
 
   return { isValid: true, message: '유효성 검사 통과' };
@@ -145,7 +160,7 @@ export const signUpJobSeeker = async (
   password: string
 ): Promise<SignUpResult> => {
   try {
-    const response = await axios.post(`${API_URL}/signup-jobseeker`, { studentId, email, password });
+    const response = await axios.post(`${API_URL}/api/signup-jobseeker`, { studentId, email, password });
     return response.data;
   } catch (error) {
     console.error('API 요청 오류:', error);
@@ -159,7 +174,7 @@ export const signUpEmployer = async (
   departmentName: string
 ): Promise<SignUpResult> => {
   try {
-    const response = await axios.post(`${API_URL}/signup-employer`, { id, password, departmentName });
+    const response = await axios.post(`${API_URL}/api/signup-employer`, { id, password, departmentName });
     return response.data;
   } catch (error) {
     console.error('API 요청 오류:', error);
@@ -173,7 +188,7 @@ export const login = async (
   password: string
 ): Promise<SignUpResult> => {
   try {
-    const response = await axios.post(`${API_URL}/login`, { userType, id, password });
+    const response = await axios.post(`${API_URL}/api/login`, { userType, id, password });
     return response.data;
   } catch (error) {
     console.error('API 요청 오류:', error);
@@ -248,7 +263,7 @@ export const validateNormalInfo = (data: NormalInfoData): ValidationResult => {
 };
 
 export const formatDate = (dateString: string): string => {
-  // 이미 YYYY-MM-DD 형식이면 그대로 반환
+  // 이�� YYYY-MM-DD 형식이면 그대로 반환
   if (/^\d{4}-\d{2}-\d{2}$/.test(dateString)) {
     return dateString;
   }
@@ -291,7 +306,7 @@ export const validateGradInfo = (data: GradInfoData): ValidationResult => {
   }
 
   // 졸업여부 유효성 사
-  const graduationOptions = ['졸업', '재학중', '휴학중', '수료', '중퇴', '자퇴', '졸업예정'];
+  const graduationOptions = ['졸업', '재학중', '휴학중', '수료', '중', '자퇴', '졸업예정'];
   if (!graduationOptions.includes(data.graduationStatus)) {
     return { isValid: false, message: '올바른 졸업여부를 선택해주세요.' };
   }
@@ -431,6 +446,29 @@ export const formatActivityNumber = (input: string): string => {
 export const validateActivityNumber = (number: string): boolean => {
   const numberRegex = /^\d{4}-\d{2}$/;
   return numberRegex.test(number);
+};
+
+// 자기소개서 유효성 검사 함수 추가
+export const validateCareerSections = (sections: CareerSectionData[]): ValidationResult => {
+  // 모든 섹션이 입력되었는지 확인
+  const emptySection = sections.find(section => !section.text.trim());
+  if (emptySection) {
+    return { 
+      isValid: false, 
+      message: `${emptySection.title}을(를) 입력해주세요.` 
+    };
+  }
+
+  // 각 섹션의 글자 수 확인
+  const invalidSection = sections.find(section => section.text.length > 500);
+  if (invalidSection) {
+    return { 
+      isValid: false, 
+      message: `${invalidSection.title}은(는) 500자를 초과할 수 없습니다.` 
+    };
+  }
+
+  return { isValid: true, message: '유효성 검사 통과' };
 };
 
 

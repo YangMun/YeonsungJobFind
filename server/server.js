@@ -453,7 +453,7 @@ app.get('/api/jobseeker-profile-summary/:jobSeekerId', async (req, res) => {
   }
 });
 
-// 구직자 학력 정보 저장 API
+// 구직자 ��력 정보 저장 API
 app.post('/api/save-grad-info', async (req, res) => {
   const { jobSeekerId, universityType, schoolName, region, admissionDate, graduationDate, graduationStatus, major } = req.body;
   
@@ -630,7 +630,7 @@ app.put('/api/update-experience-activity/:id', async (req, res) => {
 
     res.json({ 
       success: true, 
-      message: '경험/활동/교육 정보가 성공적으�� 정되었습니다.' 
+      message: '경험/활동/교육 정보가 성공적으로 정되었습니다.' 
     });
   } catch (error) {
     console.error('데이터베이스 오류:', error);
@@ -750,7 +750,7 @@ app.get('/api/get-certifications/:jobSeekerId', async (req, res) => {
       [jobSeekerId]
     );
     
-    // DATE_FORMAT�� 사용하여 날짜를 YYYY-MM-DD 형식으로 직접 변환
+    // DATE_FORMAT 사용하여 날짜를 YYYY-MM-DD 형식으로 직접 변환
     const [certifications] = await pool.query(
       `SELECT id, 
         certification_name, 
@@ -791,7 +791,7 @@ app.post('/api/update-certification', async (req, res) => {
     return res.status(400).json({ success: false, message: '자격증명은 50자를 초과할 수 없습니다.' });
   }
   if (issuingOrganization.length > 50) {
-    return res.status(400).json({ success: false, message: '발행처/기관은 50자를 ���과할 수 없습니다.' });
+    return res.status(400).json({ success: false, message: '발행처/기관은 50자를 초과할 수 없습니다.' });
   }
 
   // 날짜 형식 검사 (YYYY-MM-DD)
@@ -855,6 +855,145 @@ app.delete('/api/delete-certification/:id/:jobSeekerId', async (req, res) => {
     res.json({ 
       success: true, 
       message: '자격증이 성공적으로 삭제되었습니다.' 
+    });
+  } catch (error) {
+    console.error('데이터베이스 오류:', error);
+    res.status(500).json({ 
+      success: false, 
+      message: '서버 오류가 발생했습니다.' 
+    });
+  }
+});
+
+// 자기소개서 저장 API
+app.post('/api/save-career-statement', async (req, res) => {
+  const { 
+    jobSeekerId, 
+    growthProcess, 
+    personality, 
+    motivation, 
+    aspiration, 
+    careerHistory 
+  } = req.body;
+
+  try {
+    const query = `
+      INSERT INTO career_statements 
+      (jobSeeker_id, growth_process, personality, motivation, aspiration, career_history)
+      VALUES (?, ?, ?, ?, ?, ?)
+    `;
+    
+    const params = [jobSeekerId, growthProcess, personality, motivation, aspiration, careerHistory];
+    await pool.query(query, params);
+
+    res.json({ 
+      success: true, 
+      message: '자기소개서가 성공적으로 저장되었습니다.' 
+    });
+  } catch (error) {
+    console.error('데이터베이스 오류:', error);
+    res.status(500).json({ 
+      success: false, 
+      message: '서버 오류가 발생했습니다.' 
+    });
+  }
+});
+
+// 자기소개서 조회 API
+app.get('/api/get-career-statement/:jobSeekerId', async (req, res) => {
+  const { jobSeekerId } = req.params;
+  
+  try {
+    const [rows] = await pool.query(
+      'SELECT growth_process, personality, motivation, aspiration, career_history FROM career_statements WHERE jobSeeker_id = ?',
+      [jobSeekerId]
+    );
+    
+    if (rows.length > 0) {
+      res.json({ 
+        success: true, 
+        careerStatement: rows[0]
+      });
+    } else {
+      res.json({ 
+        success: false, 
+        message: '자기소개서 정보가 없습니다.' 
+      });
+    }
+  } catch (error) {
+    console.error('데이터베이스 오류:', error);
+    res.status(500).json({ 
+      success: false, 
+      message: '서버 오류가 발생했습니다.' 
+    });
+  }
+});
+
+// 자기소개서 수정 API
+app.put('/api/update-career-statement/:jobSeekerId', async (req, res) => {
+  const { jobSeekerId } = req.params;
+  const { 
+    growthProcess, 
+    personality, 
+    motivation, 
+    aspiration, 
+    careerHistory 
+  } = req.body;
+
+  try {
+    const query = `
+      UPDATE career_statements 
+      SET growth_process = ?, 
+          personality = ?, 
+          motivation = ?, 
+          aspiration = ?, 
+          career_history = ?
+      WHERE jobSeeker_id = ?
+    `;
+    
+    const params = [growthProcess, personality, motivation, aspiration, careerHistory, jobSeekerId];
+    const [result] = await pool.query(query, params);
+
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ 
+        success: false, 
+        message: '수정할 자기소개서를 찾을 수 없습니다.' 
+      });
+    }
+
+    res.json({ 
+      success: true, 
+      message: '자기소개서가 성공적으로 수정되었습니다.' 
+    });
+  } catch (error) {
+    console.error('데이터베이스 오류:', error);
+    res.status(500).json({ 
+      success: false, 
+      message: '서버 오류가 발생했습니다.' 
+    });
+  }
+});
+
+// 자기소개서 삭제 API
+app.delete('/api/delete-career-statement/:jobSeekerId', async (req, res) => {
+  const { jobSeekerId } = req.params;
+  
+  try {
+    const [result] = await pool.query(
+      'DELETE FROM career_statements WHERE jobSeeker_id = ?', 
+      [jobSeekerId]
+    );
+    
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ 
+        success: false, 
+        message: '삭제할 자기소개서를 찾을 수 없습니다.' 
+      });
+    }
+
+    res.json({ 
+      success: true, 
+      message: '자기소개서가 성공적으로 삭제되었습니다.' 
     });
   } catch (error) {
     console.error('데이터베이스 오류:', error);

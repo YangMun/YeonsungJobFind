@@ -117,3 +117,15 @@ CREATE TABLE certifications (
     acquisition_date DATE NOT NULL,
     FOREIGN KEY (jobSeeker_id) REFERENCES jobSeeker(id)
 );
+
+-- 자기소개서 테이블 생성
+CREATE TABLE career_statements (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    jobSeeker_id VARCHAR(15) NOT NULL,  -- 구직자 ID (외래키)
+    growth_process TEXT,           -- 성장과정 (500자 제한)
+    personality TEXT,              -- 성격(장단점) (500자 제한)
+    motivation TEXT,               -- 지원동기 (500자 제한)
+    aspiration TEXT,               -- 입사 후 포부 (500자 제한)
+    career_history TEXT,           -- 경력사항 (500자 제한)
+    FOREIGN KEY (jobSeeker_id) REFERENCES jobSeeker(id)
+);
