@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, SafeAreaView, TouchableOpacity, TextInput, ScrollView, Modal, Alert, Platform} from 'react-native';
+import { View, Text, StyleSheet, SafeAreaView, TouchableOpacity, TextInput, ScrollView, Modal, Alert} from 'react-native';
 import { Ionicons, MaterialIcons } from '@expo/vector-icons';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useAuth } from '../../../context/AuthContext';
 import axios from 'axios';
-import { formatExperienceDate, ActivityItem, validateExperienceActivity, ExperienceActivityData } from '../../../common/utils/validationUtils';
+import { formatExperienceDate, ActivityItem, API_URL  } from '../../../common/utils/validationUtils';
 
 type RootStackParamList = {
   ProfileEditView: undefined;
@@ -68,7 +68,7 @@ const ExperienceActivityEducationForm = () => {
     try {
       let response;
       if (mode === 'add') {
-        response = await axios.post(`${Platform}/api/save-experience-activity`, {
+        response = await axios.post(`${API_URL}/api/save-experience-activity`, {
           jobSeekerId: userId,
           activityType,
           organization,
@@ -77,7 +77,8 @@ const ExperienceActivityEducationForm = () => {
           description
         });
       } else {
-        response = await axios.put(`${Platform}/api/update-experience-activity/${activityId}`, {
+        response = await axios.put(`${API_URL}/api/update-experience-activity/${activityId}`, {
+          jobSeekerId: userId,
           activityType,
           organization,
           startDate,
@@ -189,7 +190,7 @@ const ExperienceActivityEducationForm = () => {
             onChangeText={handleStartDateChange}
             placeholder="YYYYMM"
             keyboardType="numeric"
-            maxLength={6}
+            maxLength={7}
           />
           <Text style={styles.dateSeparator}>~</Text>
           <TextInput
@@ -198,7 +199,7 @@ const ExperienceActivityEducationForm = () => {
             onChangeText={handleEndDateChange}
             placeholder="YYYYMM"
             keyboardType="numeric"
-            maxLength={6}
+            maxLength={7}
           />
         </View>
 
