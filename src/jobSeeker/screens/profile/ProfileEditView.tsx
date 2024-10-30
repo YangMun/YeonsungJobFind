@@ -33,7 +33,6 @@ const ProfileEditView = () => {
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const route = useRoute();
   const { userId } = useAuth();
-  const [resumeTitle, setResumeTitle] = useState('');
   const [profileName, setProfileName] = useState('');
   const [profileImage, setProfileImage] = useState<string | null>(null);
   const [careerText, setCareerText] = useState('');
@@ -234,15 +233,6 @@ const ProfileEditView = () => {
           </TouchableOpacity>
           <Text style={styles.headerTitle}>이력서 수정</Text>
         </View>
-        <View style={styles.resumeTitleContainer}>
-          <Text style={styles.resumeTitleLabel}>이력서 제목</Text>
-          <TextInput
-            style={styles.resumeTitleInput}
-            placeholder="제목을 입력하세요"
-            value={resumeTitle}
-            onChangeText={setResumeTitle}
-          />
-        </View>
         <TouchableOpacity style={styles.profileContainer} onPress={handleNavigateToNormalInfo}>
           <Image
             source={profileImage ? { uri: profileImage } : require('../../../assets/default-profile.jpg')}
@@ -411,23 +401,6 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: 18,
     fontWeight: 'bold',
-  },
-  resumeTitleContainer: {
-    padding: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: '#e0e0e0',
-  },
-  resumeTitleLabel: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    marginBottom: 8,
-  },
-  resumeTitleInput: {
-    fontSize: 16,
-    padding: 8,
-    borderWidth: 1,
-    borderColor: '#e0e0e0',
-    borderRadius: 4,
   },
   profileContainer: {
     flexDirection: 'row',
