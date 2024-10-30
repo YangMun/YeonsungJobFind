@@ -221,7 +221,7 @@ const ProfileEditView = () => {
 
   // 날짜 포맷팅 함수 추가
   const formatDate = (dateString: string) => {
-    // "2024-10-08T15:00:00.000Z" ��식에서 "2024-10-08" 형식으로 변환
+    // "2024-10-08T15:00:00.000Z" 식에서 "2024-10-08" 형식으로 변환
     return dateString.split('T')[0];
   };
 
@@ -358,9 +358,22 @@ const ProfileEditView = () => {
           </View>
           {careerStatement ? (
             <View style={styles.careerContent}>
-              <View style={styles.careerTextContainer}>
-                <Text style={styles.careerText}>{careerStatement}</Text>
-              </View>
+              {[
+                { title: '성장과정' },
+                { title: '성격(장단점)' },
+                { title: '지원동기' },
+                { title: '입사 후 포부' },
+                { title: '경력사항' }
+              ].map((item, index) => (
+                <View key={index} style={styles.careerItemBox}>
+                  <View style={styles.careerItemHeader}>
+                    <Text style={styles.careerItemTitle}>{item.title}</Text>
+                  </View>
+                  <Text style={styles.careerItemText}>
+                    {careerStatement.split('\n\n')[index].split('\n')[1]}
+                  </Text>
+                </View>
+              ))}
             </View>
           ) : (
             <Text style={styles.careerSubtitle}>커리어 소개와 핵심역량을 입력해보세요</Text>
@@ -459,25 +472,32 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   careerContent: {
-    backgroundColor: '#f8f8f8',
-    borderRadius: 8,
     padding: 16,
   },
-  careerContentHeader: {
-    position: 'absolute',
-    top: 8,
-    right: 8,
-    zIndex: 1,
+  careerItemBox: {
+    backgroundColor: '#f8f8f8',
+    borderRadius: 8,
+    padding: 20,
+    marginBottom: 16,
+    borderWidth: 1,
+    borderColor: '#e0e0e0',
+    width: '100%',
+  },
+  careerItemHeader: {
+    marginBottom: 12,
+  },
+  careerItemTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#333',
   },
   moreButton: {
     padding: 4,
   },
-  careerTextContainer: {
-    minHeight: 100,
-  },
-  careerText: {
-    fontSize: 16,
-    color: '#333',
+  careerItemText: {
+    fontSize: 14,
+    color: '#666',
+    lineHeight: 20,
   },
   educationSection: {
     padding: 16,

@@ -253,7 +253,7 @@ export const validateNormalInfo = (data: NormalInfoData): ValidationResult => {
     return { isValid: false, message: '올바른 이메일 형식이 아닙니다.' };
   }
 
-  // 휴대폰 번호 형식 확인
+  // 휴대폰 번호 형 확인
   const phoneRegex = /^\d{3}\d{3,4}\d{4}$/;
   if (!phoneRegex.test(data.phone)) {
     return { isValid: false, message: '올바른 휴대폰 번호 형식이 아닙니다. (예: 010-1234-5678)' };
@@ -263,7 +263,7 @@ export const validateNormalInfo = (data: NormalInfoData): ValidationResult => {
 };
 
 export const formatDate = (dateString: string): string => {
-  // 이�� YYYY-MM-DD 형식이면 그대로 반환
+  // 이 YYYY-MM-DD 형식이면 그대로 반환
   if (/^\d{4}-\d{2}-\d{2}$/.test(dateString)) {
     return dateString;
   }
@@ -465,6 +465,25 @@ export const validateCareerSections = (sections: CareerSectionData[]): Validatio
     return { 
       isValid: false, 
       message: `${invalidSection.title}은(는) 500자를 초과할 수 없습니다.` 
+    };
+  }
+
+  // 각 섹션의 내용이 의미 있는 텍스트인지 확인 (공백만 있는 경우 체크)
+  const invalidContentSection = sections.find(section => section.text.trim().length === 0);
+  if (invalidContentSection) {
+    return {
+      isValid: false,
+      message: `${invalidContentSection.title}에 의미 있는 내용을 입력해주세요.`
+    };
+  }
+
+  // 특수문자나 이모지만으로 구성된 내용 체크
+  const textOnlyRegex = /^[\s\S]*[a-zA-Z0-9가-힣]+[\s\S]*$/;
+  const invalidFormatSection = sections.find(section => !textOnlyRegex.test(section.text));
+  if (invalidFormatSection) {
+    return {
+      isValid: false,
+      message: `${invalidFormatSection.title}에 텍스트를 포함해주세요.`
     };
   }
 
