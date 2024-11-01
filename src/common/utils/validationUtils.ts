@@ -36,6 +36,30 @@ interface PostJobValidationResult {
   message: string;
 }
 
+export interface Job {
+  id: number;
+  title: string;
+  company_name: string;
+  contents: string;
+  recruitment_deadline: string;
+  location: string;
+}
+
+export interface JobDetail {
+  id: number;
+  title: string;
+  contents: string;
+  company_name: string;
+  location: string;
+  qualification_type: string;
+  work_period_start: string;
+  work_period_end: string;
+  recruitment_deadline: string;
+  hourly_wage: number;
+  application_method: string;
+  contact_number: string;
+}
+
 // 기본 정보 인터페이스를 export하고 필수 필드 정의
 export interface NormalInfoData {
   name: string;
