@@ -1,10 +1,10 @@
 import axios from 'axios';
 import { Platform } from 'react-native';
 
-const API_URL = Platform.select({
-  ios: 'http://localhost:3000/api',
-  android: 'http://10.0.2.2:3000/api',
-  default: 'http://localhost:3000/api', // 웹이나 다른 플랫폼을 위한 기본값
+export const API_URL = Platform.select({
+  ios: 'http://localhost:3000',
+  android: 'http://10.0.2.2:3000',
+  default: 'http://localhost:3000'
 });
 
 interface ValidationResult {
@@ -36,12 +36,20 @@ interface PostJobValidationResult {
   message: string;
 }
 
-interface NormalInfoData {
+// 기본 정보 인터페이스를 export하고 필수 필드 정의
+export interface NormalInfoData {
   name: string;
   birthDate: string;
   email: string;
   phone: string;
+  image?: string;     // 선택적 필드
+  gender?: string;    // 선택적 필드
 }
+
+// 필요한 경우 NormalInfoData를 확장하여 사용
+export type NormalInfoDisplay = Pick<NormalInfoData, 'name' | 'birthDate' | 'gender' | 'phone' | 'email'> & {
+  image: string;  // 필수 필드로 변경
+};
 
 export interface GradInfoData {
   jobSeekerId: string;
@@ -54,7 +62,23 @@ export interface GradInfoData {
   major: string;
 }
 
-// 자격 데이터 인터페이스 추가
+// GradInfoDisplay 타입 추가
+export type GradInfoDisplay = Pick<GradInfoData, 'universityType' | 'schoolName' | 'region' | 'admissionDate' | 'graduationDate' | 'graduationStatus' | 'major'>;
+
+// snake_case에서 camelCase로 변환하는 함수 추가
+export const convertGradInfo = (serverData: any): GradInfoDisplay => {
+  return {
+    universityType: serverData.university_type,
+    schoolName: serverData.school_name,
+    region: serverData.region,
+    admissionDate: serverData.admission_date,
+    graduationDate: serverData.graduation_date,
+    graduationStatus: serverData.graduation_status,
+    major: serverData.major,
+  };
+};
+
+// 자격 이터 인터페이스 추가
 export interface CertificationData {
   certificationName: string;
   issuingOrganization: string;
@@ -67,6 +91,30 @@ export interface Certification {
   certification_name: string;
   issuing_organization: string;
   acquisition_date: string;
+}
+
+// 변환 함수 추가
+export const convertCertification = (serverData: Certification): CertificationData => {
+  return {
+    certificationName: serverData.certification_name,
+    issuingOrganization: serverData.issuing_organization,
+    acquisitionDate: serverData.acquisition_date
+  };
+};
+
+// 자기소개서 섹션 인페이스 추가
+export interface CareerSectionData {
+  title: string;
+  text: string;
+}
+
+// CareerStatement 인터페이스 추가
+export interface CareerStatement {
+  growth_process: string;
+  personality: string;
+  motivation: string;
+  aspiration: string;
+  career_history: string;
 }
 
 export const validateJobSeeker = async (
@@ -98,7 +146,7 @@ export const validateJobSeeker = async (
 
   // DB에 이미 존재하는 학번 또는 이메일인지 확인
   try {
-    const response = await axios.post(`${API_URL}/validate-jobseeker`, { studentId, email });
+    const response = await axios.post(`${API_URL}/api/validate-jobseeker`, { studentId, email });
     return response.data;
   } catch (error) {
     console.error('API 요청 오류:', error);
@@ -129,14 +177,12 @@ export const validateEmployer = async (
 
   // DB에 이미 존재하는 아이디인지 확인
   try {
-    const response = await axios.post(`${API_URL}/validate-employer`, { id });
+    const response = await axios.post(`${API_URL}/api/validate-employer`, { id });
     return response.data;
   } catch (error) {
     console.error('API 요청 오류:', error);
     return { isValid: false, message: '서버 오류가 발생했습니다. 나중에 다시 시도해주세요.' };
   }
-
-  return { isValid: true, message: '유효성 검사 통과' };
 };
 
 export const signUpJobSeeker = async (
@@ -145,7 +191,7 @@ export const signUpJobSeeker = async (
   password: string
 ): Promise<SignUpResult> => {
   try {
-    const response = await axios.post(`${API_URL}/signup-jobseeker`, { studentId, email, password });
+    const response = await axios.post(`${API_URL}/api/signup-jobseeker`, { studentId, email, password });
     return response.data;
   } catch (error) {
     console.error('API 요청 오류:', error);
@@ -159,7 +205,7 @@ export const signUpEmployer = async (
   departmentName: string
 ): Promise<SignUpResult> => {
   try {
-    const response = await axios.post(`${API_URL}/signup-employer`, { id, password, departmentName });
+    const response = await axios.post(`${API_URL}/api/signup-employer`, { id, password, departmentName });
     return response.data;
   } catch (error) {
     console.error('API 요청 오류:', error);
@@ -173,7 +219,7 @@ export const login = async (
   password: string
 ): Promise<SignUpResult> => {
   try {
-    const response = await axios.post(`${API_URL}/login`, { userType, id, password });
+    const response = await axios.post(`${API_URL}/api/login`, { userType, id, password });
     return response.data;
   } catch (error) {
     console.error('API 요청 오류:', error);
@@ -238,7 +284,7 @@ export const validateNormalInfo = (data: NormalInfoData): ValidationResult => {
     return { isValid: false, message: '올바른 이메일 형식이 아닙니다.' };
   }
 
-  // 휴대폰 번호 형식 확인
+  // 휴대폰 번호 형 확인
   const phoneRegex = /^\d{3}\d{3,4}\d{4}$/;
   if (!phoneRegex.test(data.phone)) {
     return { isValid: false, message: '올바른 휴대폰 번호 형식이 아닙니다. (예: 010-1234-5678)' };
@@ -247,10 +293,19 @@ export const validateNormalInfo = (data: NormalInfoData): ValidationResult => {
   return { isValid: true, message: '유효성 검사 통과' };
 };
 
-export const formatDate = (input: string): string => {
-  const numericValue = input.replace(/[^0-9]/g, '');
-  if (numericValue.length <= 4) return numericValue;
-  return numericValue.slice(0, 4) + '.' + numericValue.slice(4, 6);
+export const formatDate = (dateString: string): string => {
+  // 이 YYYY-MM-DD 형식이면 그대로 반환
+  if (/^\d{4}-\d{2}-\d{2}$/.test(dateString)) {
+    return dateString;
+  }
+
+  const date = new Date(dateString);
+  // 로컬 시간으로 변환
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  
+  return `${year}-${month}-${day}`;
 };
 
 export const validateDate = (date: string): boolean => {
@@ -259,7 +314,7 @@ export const validateDate = (date: string): boolean => {
 };
 
 export const validateGradInfo = (data: GradInfoData): ValidationResult => {
-  // 모든 필수 필드가 력되었는지 확인
+  // 모 필수 필드가 력되었는지 확인
   if (!data.universityType || !data.schoolName || !data.admissionDate || !data.graduationDate || !data.graduationStatus || !data.major) {
     return { isValid: false, message: '모든 필수 항목을 입력해주세요.' };
   }
@@ -272,7 +327,7 @@ export const validateGradInfo = (data: GradInfoData): ValidationResult => {
 
   // 학교명 길이 검사
   if (data.schoolName.length > 30) {
-    return { isValid: false, message: '학교명은 30자를 초과할 수 없습니다.' };
+    return { isValid: false, message: '학교명은 30자를 초과 수 없습니다.' };
   }
 
   // 재학기간 형식 검사
@@ -281,8 +336,8 @@ export const validateGradInfo = (data: GradInfoData): ValidationResult => {
     return { isValid: false, message: '재학기간은 YYYY.MM 형식으로 입력해주세요.' };
   }
 
-  // 졸업여부 유효성 검사
-  const graduationOptions = ['졸업', '재학중', '휴학중', '수료', '중퇴', '자퇴', '졸업예정'];
+  // 졸업여부 유효성 사
+  const graduationOptions = ['졸업', '재학중', '휴학중', '수료', '중', '자퇴', '졸업예정'];
   if (!graduationOptions.includes(data.graduationStatus)) {
     return { isValid: false, message: '올바른 졸업여부를 선택해주세요.' };
   }
@@ -314,11 +369,32 @@ export interface ExperienceActivityData {
   description: string;
 }
 
+// 서버 응답 데이터 인터페이스
+interface ExperienceActivityResponse {
+  id: number;
+  activity_type: string;
+  organization: string;
+  start_date: string;
+  end_date: string;
+  description: string;
+}
+
+// 변환 함수 추가
+export const convertExperienceActivity = (serverData: ExperienceActivityResponse): ExperienceActivityData => {
+  return {
+    activityType: serverData.activity_type,
+    organization: serverData.organization,
+    startDate: serverData.start_date,
+    endDate: serverData.end_date,
+    description: serverData.description
+  };
+};
+
 // ExperienceActivity 유효성 검사 함수
 export const validateExperienceActivity = (data: ExperienceActivityData): ValidationResult => {
   // 모든 필드가 입력되었는지 확인
   if (!data.activityType || !data.organization || !data.startDate || !data.endDate || !data.description) {
-    return { isValid: false, message: '모든 필드를 입력해주세요.' };
+    return { isValid: false, message: '모 필드를 입력해주요.' };
   }
 
   // 동구분 유효성 검사
@@ -348,12 +424,20 @@ export const validateExperienceActivity = (data: ExperienceActivityData): Valida
 
 // 날짜 포맷팅 함수 (YYYYMM -> YYYY-MM)
 export const formatExperienceDate = (input: string): string => {
+  // 숫자만 추출
   const numericValue = input.replace(/[^0-9]/g, '');
-  if (numericValue.length !== 6) return input;
-  return numericValue.slice(0, 4) + '-' + numericValue.slice(4, 6);
+  
+  // 6자리 미만이면 그대로 반환
+  if (numericValue.length < 6) return numericValue;
+  
+  // YYYY-MM 형식으로 변환
+  const year = numericValue.slice(0, 4);
+  const month = numericValue.slice(4, 6).padEnd(2, '0');
+  
+  return `${year}-${month}`;
 };
 
-// 날짜 유효성 검사 함수
+// 날짜 유효성 사 함수
 export const validateExperienceDate = (date: string): boolean => {
   const dateRegex = /^\d{4}-\d{2}$/;
   return dateRegex.test(date);
@@ -384,11 +468,96 @@ export const validateCertification = (data: CertificationData): ValidationResult
   // 날짜 형식 검사 (YYYY-MM-DD)
   const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
   if (!dateRegex.test(data.acquisitionDate)) {
-    return { isValid: false, message: '올바른 날짜 형식이 아닙니다.' };
+    return { isValid: false, message: '올바른 날짜 형식 아닙니다.' };
   }
 
   return { isValid: true, message: '유효성 검사 통과' };
 };
 
+// 활동기록 번호 포맷팅 함수 추가
+export const formatActivityNumber = (input: string): string => {
+  // 하이픈 제거 및 숫자만 추출
+  const numericValue = input.replace(/[^0-9]/g, '');
+  
+  // 6자리 제한
+  if (numericValue.length > 8) {
+    return input.slice(0, -1);
+  }
+  
+  // 4자리 이상일 때만 하이픈 추가
+  if (numericValue.length >= 4) {
+    const firstPart = numericValue.slice(0, 4);
+    const secondPart = numericValue.slice(4);
+    return `${firstPart}-${secondPart}`;
+  }
+  
+  return numericValue;
+};
 
+// 활동기록 번호 유효성 검사 함수 추가
+export const validateActivityNumber = (number: string): boolean => {
+  const numberRegex = /^\d{4}-\d{2}$/;
+  return numberRegex.test(number);
+};
 
+// 자기소개서 유효성 검사 함수 추가
+export const validateCareerSections = (sections: CareerSectionData[]): ValidationResult => {
+  // 모든 섹션이 입력되었는지 확인
+  const emptySection = sections.find(section => !section.text.trim());
+  if (emptySection) {
+    return { 
+      isValid: false, 
+      message: `${emptySection.title}을(를) 입력해주세요.` 
+    };
+  }
+
+  // 각 섹션의 글자 수 확인
+  const invalidSection = sections.find(section => section.text.length > 500);
+  if (invalidSection) {
+    return { 
+      isValid: false, 
+      message: `${invalidSection.title}은(는) 500자를 초과할 수 없습니다.` 
+    };
+  }
+
+  // 각 섹션의 내용이 의미 있는 텍스트인지 확인 (공백만 있는 경우 체크)
+  const invalidContentSection = sections.find(section => section.text.trim().length === 0);
+  if (invalidContentSection) {
+    return {
+      isValid: false,
+      message: `${invalidContentSection.title}에 의미 있는 내용을 입력해주세요.`
+    };
+  }
+
+  // 특수문자나 이모지만으로 구성된 내용 체크
+  const textOnlyRegex = /^[\s\S]*[a-zA-Z0-9가-힣]+[\s\S]*$/;
+  const invalidFormatSection = sections.find(section => !textOnlyRegex.test(section.text));
+  if (invalidFormatSection) {
+    return {
+      isValid: false,
+      message: `${invalidFormatSection.title}에 텍스트를 포함해주세요.`
+    };
+  }
+
+  return { isValid: true, message: '유효성 검사 통과' };
+};
+
+// 전화번호 마스킹 함수 수정
+export const maskPhoneNumber = (phone: string): string => {
+  // 숫자만 추출
+  const numbers = phone.replace(/[^0-9]/g, '');
+  
+  // 11자리 전화번호 형식으로 마스킹
+  if (numbers.length === 10 || numbers.length === 11) {
+    return numbers.replace(/(\d{3})(\d{3,4})(\d{4})/, '$1-****-$3');
+  }
+  
+  return phone; // 형식이 맞지 않으면 원본 반환
+};
+
+// 이메일 마스킹 함수 추가
+export const maskEmail = (email: string): string => {
+  const [username, domain] = email.split('@');
+  const maskedUsername = username.slice(0, 3) + '*'.repeat(username.length - 3);
+  return `${maskedUsername}@${domain}`;
+};

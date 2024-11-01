@@ -145,7 +145,7 @@ app.post('/api/post-job', async (req, res) => {
     res.json({ success: true, message: '구인 공고가 성공적으로 등록되었습니다.' });
   } catch (error) {
     console.error('데이터베이스 오류:', error);
-    res.status(500).json({ success: false, message: '서버 오류가 발생했습니다.' });
+    res.status(500).json({ success: false, message: '서버 오류가 발생습니다.' });
   }
 });
 
@@ -310,7 +310,7 @@ app.delete('/api/delete-employer/:id', async (req, res) => {
     // 트랜잭션 커밋
     await pool.query('COMMIT');
 
-    res.json({ success: true, message: '계정과 관련된 모든 정보가 성공적으로 제었습니다.' });
+    res.json({ success: true, message: '계정과 관련된 모든 정보가 성공적으로 었습니다.' });
   } catch (error) {
     // 오류 발생 시 롤백
     await pool.query('ROLLBACK');
@@ -453,7 +453,7 @@ app.get('/api/jobseeker-profile-summary/:jobSeekerId', async (req, res) => {
   }
 });
 
-// 구직자 학력 정보 저장 API
+// 구직자 ��력 정보 저장 API
 app.post('/api/save-grad-info', async (req, res) => {
   const { jobSeekerId, universityType, schoolName, region, admissionDate, graduationDate, graduationStatus, major } = req.body;
   
@@ -574,15 +574,13 @@ app.get('/api/get-experience-activities/:jobSeekerId', async (req, res) => {
   const { jobSeekerId } = req.params;
   
   try {
-    // 먼저 총 개수를 가져옵니다.
     const [countResult] = await pool.query(
       'SELECT COUNT(*) as count FROM ExperienceActivity WHERE jobSeeker_id = ?',
       [jobSeekerId]
     );
     
-    // 그 다음 모든 활동 정보를 가져옵니다.
     const [activities] = await pool.query(
-      'SELECT organization, activity_type, start_date, end_date, description FROM ExperienceActivity WHERE jobSeeker_id = ? ORDER BY start_date DESC',
+      'SELECT id, organization, activity_type, start_date, end_date, description FROM ExperienceActivity WHERE jobSeeker_id = ? ORDER BY start_date DESC',
       [jobSeekerId]
     );
     
@@ -604,22 +602,42 @@ app.get('/api/get-experience-activities/:jobSeekerId', async (req, res) => {
 // 경험/활동/교육 정보 수정 API
 app.put('/api/update-experience-activity/:id', async (req, res) => {
   const { id } = req.params;
-  const { activityType, organization, startDate, endDate, description } = req.body;
+  const { activityType, organization, startDate, endDate, description, jobSeekerId } = req.body;
   
+  if (!jobSeekerId) {
+    return res.status(400).json({ 
+      success: false, 
+      message: '사용자 ID가 필요합니다.' 
+    });
+  }
+
   try {
     const query = `
       UPDATE ExperienceActivity 
       SET activity_type = ?, organization = ?, start_date = ?, end_date = ?, description = ?
-      WHERE id = ?
+      WHERE id = ? AND jobSeeker_id = ?
     `;
-    const queryParams = [activityType, organization, startDate, endDate, description, id];
+    const queryParams = [activityType, organization, startDate, endDate, description, id, jobSeekerId];
 
-    await pool.query(query, queryParams);
+    const [result] = await pool.query(query, queryParams);
+    
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ 
+        success: false, 
+        message: '해당 활동을 찾을 수 없습니다.' 
+      });
+    }
 
-    res.json({ success: true, message: '경험/활동/교육 정보가 성공적으로 수정되었습니다.' });
+    res.json({ 
+      success: true, 
+      message: '경험/활동/교육 정보가 성공적으로 정되었습니다.' 
+    });
   } catch (error) {
     console.error('데이터베이스 오류:', error);
-    res.status(500).json({ success: false, message: '서버 오류가 발생했습니다.' });
+    res.status(500).json({ 
+      success: false, 
+      message: '서버 오류가 발생했습니다.' 
+    });
   }
 });
 
@@ -650,6 +668,36 @@ app.get('/api/get-experience-activities/:jobSeekerId', async (req, res) => {
   } catch (error) {
     console.error('데이터베이스 오류:', error);
     res.status(500).json({ success: false, message: '서버 오류가 발생했습니다.' });
+  }
+});
+
+// 경험/활동/교육 정보 삭제 API
+app.delete('/api/delete-experience-activity/:id/:jobSeekerId', async (req, res) => {
+  const { id, jobSeekerId } = req.params;
+  
+  try {
+    const [result] = await pool.query(
+      'DELETE FROM ExperienceActivity WHERE id = ? AND jobSeeker_id = ?', 
+      [id, jobSeekerId]
+    );
+    
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ 
+        success: false, 
+        message: '해당 활동을 찾을 수 없습니다.' 
+      });
+    }
+
+    res.json({ 
+      success: true, 
+      message: '활동이 성공적으로 삭제되었습니다.' 
+    });
+  } catch (error) {
+    console.error('데이터베이스 오류:', error);
+    res.status(500).json({ 
+      success: false, 
+      message: '서버 오류가 발생했습니다.' 
+    });
   }
 });
 
@@ -702,8 +750,15 @@ app.get('/api/get-certifications/:jobSeekerId', async (req, res) => {
       [jobSeekerId]
     );
     
+    // DATE_FORMAT 사용하여 날짜를 YYYY-MM-DD 형식으로 직접 변환
     const [certifications] = await pool.query(
-      'SELECT id, certification_name, issuing_organization, acquisition_date FROM certifications WHERE jobSeeker_id = ? ORDER BY acquisition_date DESC',
+      `SELECT id, 
+        certification_name, 
+        issuing_organization, 
+        DATE_FORMAT(acquisition_date, '%Y-%m-%d') as acquisition_date 
+      FROM certifications 
+      WHERE jobSeeker_id = ? 
+      ORDER BY acquisition_date DESC`,
       [jobSeekerId]
     );
     
@@ -719,6 +774,233 @@ app.get('/api/get-certifications/:jobSeekerId', async (req, res) => {
   } catch (error) {
     console.error('데이터베이스 오류:', error);
     res.status(500).json({ success: false, message: '서버 오류가 발생했습니다.' });
+  }
+});
+
+// 자격증 정보 수정 API
+app.post('/api/update-certification', async (req, res) => {
+  const { jobSeekerId, certificationId, certificationName, issuingOrganization, acquisitionDate } = req.body;
+  
+  // 입력값 검증
+  if (!jobSeekerId || !certificationId || !certificationName || !issuingOrganization || !acquisitionDate) {
+    return res.status(400).json({ success: false, message: '모든 필드를 입력해주세요.' });
+  }
+
+  // 길이 제한 검사
+  if (certificationName.length > 50) {
+    return res.status(400).json({ success: false, message: '자격증명은 50자를 초과할 수 없습니다.' });
+  }
+  if (issuingOrganization.length > 50) {
+    return res.status(400).json({ success: false, message: '발행처/기관은 50자를 초과할 수 없습니다.' });
+  }
+
+  // 날짜 형식 검사 (YYYY-MM-DD)
+  const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
+  if (!dateRegex.test(acquisitionDate)) {
+    return res.status(400).json({ success: false, message: '올바른 날짜 형식이 아닙니다.' });
+  }
+
+  try {
+    const query = `
+      UPDATE certifications 
+      SET certification_name = ?, 
+          issuing_organization = ?, 
+          acquisition_date = ?
+      WHERE id = ? AND jobSeeker_id = ?
+    `;
+    const queryParams = [
+      certificationName,
+      issuingOrganization,
+      acquisitionDate,
+      certificationId,
+      jobSeekerId
+    ];
+
+    const [result] = await pool.query(query, queryParams);
+    
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ 
+        success: false, 
+        message: '해당 자격증을 찾을 수 없거나 수정 권한이 없습니다.' 
+      });
+    }
+
+    res.json({ 
+      success: true, 
+      message: '자격증 정보가 성공적으로 수정되었습니다.' 
+    });
+  } catch (error) {
+    console.error('데이터베이스 오류:', error);
+    res.status(500).json({ success: false, message: '서버 오류가 발생했습니다.' });
+  }
+});
+
+// 자격증 정보 삭제 API
+app.delete('/api/delete-certification/:id/:jobSeekerId', async (req, res) => {
+  const { id, jobSeekerId } = req.params;
+  
+  try {
+    const [result] = await pool.query(
+      'DELETE FROM certifications WHERE id = ? AND jobSeeker_id = ?', 
+      [id, jobSeekerId]
+    );
+    
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ 
+        success: false, 
+        message: '해당 자격증을 찾을 수 없거나 삭제 권한이 없습니다.' 
+      });
+    }
+
+    res.json({ 
+      success: true, 
+      message: '자격증이 성공적으로 삭제되었습니다.' 
+    });
+  } catch (error) {
+    console.error('데이터베이스 오류:', error);
+    res.status(500).json({ 
+      success: false, 
+      message: '서버 오류가 발생했습니다.' 
+    });
+  }
+});
+
+// 자기소개서 저장 API
+app.post('/api/save-career-statement', async (req, res) => {
+  const { 
+    jobSeekerId, 
+    growthProcess, 
+    personality, 
+    motivation, 
+    aspiration, 
+    careerHistory 
+  } = req.body;
+
+  try {
+    const query = `
+      INSERT INTO career_statements 
+      (jobSeeker_id, growth_process, personality, motivation, aspiration, career_history)
+      VALUES (?, ?, ?, ?, ?, ?)
+    `;
+    
+    const params = [jobSeekerId, growthProcess, personality, motivation, aspiration, careerHistory];
+    await pool.query(query, params);
+
+    res.json({ 
+      success: true, 
+      message: '자기소개서가 성공적으로 저장되었습니다.' 
+    });
+  } catch (error) {
+    console.error('데이터베이스 오류:', error);
+    res.status(500).json({ 
+      success: false, 
+      message: '서버 오류가 발생했습니다.' 
+    });
+  }
+});
+
+// 자기소개서 조회 API
+app.get('/api/get-career-statement/:jobSeekerId', async (req, res) => {
+  const { jobSeekerId } = req.params;
+  
+  try {
+    const [rows] = await pool.query(
+      'SELECT growth_process, personality, motivation, aspiration, career_history FROM career_statements WHERE jobSeeker_id = ?',
+      [jobSeekerId]
+    );
+    
+    if (rows.length > 0) {
+      res.json({ 
+        success: true, 
+        careerStatement: rows[0]
+      });
+    } else {
+      res.json({ 
+        success: false, 
+        message: '자기소개서 정보가 없습니다.' 
+      });
+    }
+  } catch (error) {
+    console.error('데이터베이스 오류:', error);
+    res.status(500).json({ 
+      success: false, 
+      message: '서버 오류가 발생했습니다.' 
+    });
+  }
+});
+
+// 자기소개서 수정 API
+app.put('/api/update-career-statement/:jobSeekerId', async (req, res) => {
+  const { jobSeekerId } = req.params;
+  const { 
+    growthProcess, 
+    personality, 
+    motivation, 
+    aspiration, 
+    careerHistory 
+  } = req.body;
+
+  try {
+    const query = `
+      UPDATE career_statements 
+      SET growth_process = ?, 
+          personality = ?, 
+          motivation = ?, 
+          aspiration = ?, 
+          career_history = ?
+      WHERE jobSeeker_id = ?
+    `;
+    
+    const params = [growthProcess, personality, motivation, aspiration, careerHistory, jobSeekerId];
+    const [result] = await pool.query(query, params);
+
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ 
+        success: false, 
+        message: '수정할 자기소개서를 찾을 수 없습니다.' 
+      });
+    }
+
+    res.json({ 
+      success: true, 
+      message: '자기소개서가 성공적으로 수정되었습니다.' 
+    });
+  } catch (error) {
+    console.error('데이터베이스 오류:', error);
+    res.status(500).json({ 
+      success: false, 
+      message: '서버 오류가 발생했습니다.' 
+    });
+  }
+});
+
+// 자기소개서 삭제 API
+app.delete('/api/delete-career-statement/:jobSeekerId', async (req, res) => {
+  const { jobSeekerId } = req.params;
+  
+  try {
+    const [result] = await pool.query(
+      'DELETE FROM career_statements WHERE jobSeeker_id = ?', 
+      [jobSeekerId]
+    );
+    
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ 
+        success: false, 
+        message: '삭제할 자기소개서를 찾을 수 없습니다.' 
+      });
+    }
+
+    res.json({ 
+      success: true, 
+      message: '자기소개서가 성공적으로 삭제되었습니다.' 
+    });
+  } catch (error) {
+    console.error('데이터베이스 오류:', error);
+    res.status(500).json({ 
+      success: false, 
+      message: '서버 오류가 발생했습니다.' 
+    });
   }
 });
 
@@ -741,7 +1023,7 @@ app.get('/api/employer/all-applicants/:employerId', async (req, res) => {
         pj.title as job_title,
         ni.name,
         gi.school_name
-      FROM job_applications ja
+      FROM JobPost_Status ja
       JOIN PostJob pj ON ja.job_id = pj.id
       LEFT JOIN NormalInformation ni ON ja.jobSeeker_id = ni.jobSeeker_id
       LEFT JOIN GradeInformation gi ON ja.jobSeeker_id = gi.jobSeeker_id

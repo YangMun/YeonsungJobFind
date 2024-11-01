@@ -1,11 +1,11 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { View, Text, StyleSheet, SafeAreaView, TouchableOpacity, TextInput, Image, ScrollView, Modal, TouchableWithoutFeedback, Alert } from 'react-native';
+import { View, Text, StyleSheet, SafeAreaView, TouchableOpacity, TextInput, Image, ScrollView, Modal, TouchableWithoutFeedback, Alert, Platform } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation, useFocusEffect, useRoute } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import axios from 'axios';
 import { useAuth } from '../../../context/AuthContext';
-import { ActivityItem, Certification } from '../../../common/utils/validationUtils';
+import { ActivityItem, API_URL, Certification } from '../../../common/utils/validationUtils';
 
 type RootStackParamList = {
   NormalInfo: undefined;
@@ -23,14 +23,16 @@ type RootStackParamList = {
     mode: 'add' | 'edit'; 
     activity?: ActivityItem 
   };
-  CertificationForm: undefined;  // mode나 certification 파라미터가 필요 없음
+  CertificationForm: {
+    mode: 'add' | 'edit';
+    certification?: Certification;
+  };
 };
 
 const ProfileEditView = () => {
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const route = useRoute();
   const { userId } = useAuth();
-  const [resumeTitle, setResumeTitle] = useState('');
   const [profileName, setProfileName] = useState('');
   const [profileImage, setProfileImage] = useState<string | null>(null);
   const [careerText, setCareerText] = useState('');
@@ -43,31 +45,27 @@ const ProfileEditView = () => {
   const [activityCount, setActivityCount] = useState(0);
   const [certifications, setCertifications] = useState<Certification[]>([]);
   const [certificationCount, setCertificationCount] = useState(0);
+  const [careerStatement, setCareerStatement] = useState('');
 
   useEffect(() => {
     fetchProfileSummary();
     fetchEducationInfo();
     fetchExperienceActivities();
     fetchCertifications();
+    fetchCareerStatement();
   }, []);
 
   const fetchProfileSummary = async () => {
     if (!userId) return;
 
     try {
-      const baseURL = Platform.select({
-        ios: 'http://localhost:3000',
-        android: 'http://10.0.2.2:3000',
-        default: 'http://localhost:3000'
-      });
-
-      const response = await axios.get(`${baseURL}/api/jobseeker-profile-summary/${userId}`);
+      const response = await axios.get(`${API_URL}/api/jobseeker-profile-summary/${userId}`);
       if (response.data.success) {
         setProfileName(response.data.profile.name || '이름 없음');
-        setProfileImage(response.data.profile.image ? `${baseURL}/uploads/${response.data.profile.image}` : null);
+        setProfileImage(response.data.profile.image ? `${API_URL}/uploads/${response.data.profile.image}` : null);
       }
     } catch (error) {
-      console.error('프로필 요약 정보 조회 오류:', error);
+      console.error('프로필 정보 조회 오류:', error);
     }
   };
 
@@ -75,13 +73,7 @@ const ProfileEditView = () => {
     if (!userId) return;
 
     try {
-      const baseURL = Platform.select({
-        ios: 'http://localhost:3000',
-        android: 'http://10.0.2.2:3000',
-        default: 'http://localhost:3000'
-      });
-
-      const response = await axios.get(`${baseURL}/api/get-education-info/${userId}`);
+      const response = await axios.get(`${API_URL}/api/get-education-info/${userId}`);
       if (response.data.success) {
         const { university_type, graduation_status, school_name, admission_date, graduation_date } = response.data.info;
         setEducationSummary(`${university_type} ${graduation_status}`);
@@ -102,13 +94,7 @@ const ProfileEditView = () => {
     if (!userId) return;
 
     try {
-      const baseURL = Platform.select({
-        ios: 'http://localhost:3000',
-        android: 'http://10.0.2.2:3000',
-        default: 'http://localhost:3000'
-      });
-
-      const response = await axios.get(`${baseURL}/api/get-experience-activities/${userId}`);
+      const response = await axios.get(`${API_URL}/api/get-experience-activities/${userId}`);
       if (response.data.success) {
         setExperienceActivities(response.data.activities);
         setActivityCount(response.data.count);
@@ -122,13 +108,7 @@ const ProfileEditView = () => {
     if (!userId) return;
 
     try {
-      const baseURL = Platform.select({
-        ios: 'http://localhost:3000',
-        android: 'http://10.0.2.2:3000',
-        default: 'http://localhost:3000'
-      });
-
-      const response = await axios.get(`${baseURL}/api/get-certifications/${userId}`);
+      const response = await axios.get(`${API_URL}/api/get-certifications/${userId}`);
       if (response.data.success) {
         setCertifications(response.data.certifications);
         setCertificationCount(response.data.count);
@@ -138,12 +118,34 @@ const ProfileEditView = () => {
     }
   }, [userId]);
 
+  const fetchCareerStatement = useCallback(async () => {
+    if (!userId) return;
+
+    try {
+      const response = await axios.get(`${API_URL}/api/get-career-statement/${userId}`);
+      if (response.data.success) {
+        const statement = response.data.careerStatement;
+        const formattedText = [
+          `[성장과정]\n${statement.growth_process}`,
+          `[성격(장단점)]\n${statement.personality}`,
+          `[지원동기]\n${statement.motivation}`,
+          `[입사 후 포부]\n${statement.aspiration}`,
+          `[경력사항]\n${statement.career_history}`
+        ].join('\n\n');
+        setCareerStatement(formattedText);
+      }
+    } catch (error) {
+      console.error('자기소개서 조회 오류:', error);
+    }
+  }, [userId]);
+
   useFocusEffect(
     useCallback(() => {
       fetchEducationInfo();
       fetchExperienceActivities();
       fetchCertifications();
-    }, [fetchEducationInfo, fetchExperienceActivities, fetchCertifications])
+      fetchCareerStatement();
+    }, [fetchEducationInfo, fetchExperienceActivities, fetchCertifications, fetchCareerStatement])
   );
 
   const handleNavigateToNormalInfo = () => {
@@ -174,6 +176,11 @@ const ProfileEditView = () => {
       const updatedCareerText = (route.params as { updatedCareerText?: string })?.updatedCareerText;
       if (updatedCareerText !== undefined) {
         setCareerText(updatedCareerText);
+        if (updatedCareerText === '') {
+          setCareerStatement('');
+        } else {
+          setCareerStatement(updatedCareerText);
+        }
       }
     });
 
@@ -181,7 +188,15 @@ const ProfileEditView = () => {
   }, [navigation, route.params]);
 
   const handleNavigateToMyCareerEdit = () => {
-    navigation.navigate('MyCareerEditView', { initialCareerText: careerText });
+    if (careerStatement) {
+      navigation.navigate('MyCareerEditView', { 
+        initialCareerText: careerStatement 
+      });
+    } else {
+      navigation.navigate('MyCareerEditView', { 
+        initialCareerText: '' 
+      });
+    }
   };
 
   const handleAddExperienceActivityEducation = () => {
@@ -193,12 +208,19 @@ const ProfileEditView = () => {
   };
 
   const handleAddCertification = () => {
-    navigation.navigate('CertificationForm');  // 파라미터 없이 단순 네비게이션
+    navigation.navigate('CertificationForm', { mode: 'add' });
+  };
+
+  const handleEditCertification = (cert: Certification) => {
+    navigation.navigate('CertificationForm', {
+      mode: 'edit',
+      certification: cert
+    });
   };
 
   // 날짜 포맷팅 함수 추가
   const formatDate = (dateString: string) => {
-    // "2024-10-08T15:00:00.000Z" 형식에서 "2024-10-08" 형식으로 변환
+    // "2024-10-08T15:00:00.000Z" 식에서 "2024-10-08" 형식으로 변환
     return dateString.split('T')[0];
   };
 
@@ -210,15 +232,6 @@ const ProfileEditView = () => {
             <Ionicons name="chevron-back" size={24} color="#000" />
           </TouchableOpacity>
           <Text style={styles.headerTitle}>이력서 수정</Text>
-        </View>
-        <View style={styles.resumeTitleContainer}>
-          <Text style={styles.resumeTitleLabel}>이력서 제목</Text>
-          <TextInput
-            style={styles.resumeTitleInput}
-            placeholder="제목을 입력하세요"
-            value={resumeTitle}
-            onChangeText={setResumeTitle}
-          />
         </View>
         <TouchableOpacity style={styles.profileContainer} onPress={handleNavigateToNormalInfo}>
           <Image
@@ -232,26 +245,6 @@ const ProfileEditView = () => {
           <Ionicons name="chevron-forward" size={24} color="#000" />
         </TouchableOpacity>
         
-        <View style={styles.careerSection}>
-          <View style={styles.careerHeader}>
-            <Text style={styles.careerTitle}>My career</Text>
-            <Text style={styles.careerSubtitle}>커리어 소개와 핵심역량을 입력해보세요</Text>
-          </View>
-          <View style={styles.careerContent}>
-            <View style={styles.careerContentHeader}>
-              <TouchableOpacity 
-                style={styles.moreButton}
-                onPress={handleNavigateToMyCareerEdit}
-              >
-                <Ionicons name="ellipsis-horizontal" size={24} color="#000" />
-              </TouchableOpacity>
-            </View>
-            <View style={styles.careerTextContainer}>
-              <Text style={styles.careerText}>{careerText || '커리어 정보를 입력해주세요.'}</Text>
-            </View>
-          </View>
-        </View>
-
         <View style={styles.educationSection}>
           <View style={styles.sectionHeader}>
             <View style={styles.titleContainer}>
@@ -309,7 +302,6 @@ const ProfileEditView = () => {
           ))}
         </View>
 
-        {/* 새로운 자격 및 면허 섹션 */}
         <View style={styles.certificateSection}>
           <View style={styles.sectionHeader}>
             <View style={styles.titleContainer}>
@@ -327,7 +319,10 @@ const ProfileEditView = () => {
             <View key={index} style={styles.certItem}>
               <View style={styles.certHeader}>
                 <Text style={styles.certName}>{cert.certification_name}</Text>
-                <TouchableOpacity style={styles.moreButton}>
+                <TouchableOpacity 
+                  style={styles.moreButton}
+                  onPress={() => handleEditCertification(cert)}
+                >
                   <Ionicons name="ellipsis-vertical" size={20} color="#666" />
                 </TouchableOpacity>
               </View>
@@ -339,7 +334,51 @@ const ProfileEditView = () => {
           ))}
         </View>
 
+        <View style={styles.careerSection}>
+          <View style={styles.sectionHeader}>
+            <View style={styles.titleContainer}>
+              <Text style={styles.careerTitle}>자기소개서</Text>
+            </View>
+            <TouchableOpacity 
+              style={styles.addButton}
+              onPress={handleNavigateToMyCareerEdit}
+            >
+              <Ionicons name={careerStatement ? "create" : "add"} size={24} color="#4a90e2" />
+            </TouchableOpacity>
+          </View>
+          {careerStatement ? (
+            <View style={styles.careerContent}>
+              {[
+                { title: '성장과정' },
+                { title: '성격(장단점)' },
+                { title: '지원동기' },
+                { title: '입사 후 포부' },
+                { title: '경력사항' }
+              ].map((item, index) => (
+                <View key={index} style={styles.careerItemBox}>
+                  <View style={styles.careerItemHeader}>
+                    <Text style={styles.careerItemTitle}>{item.title}</Text>
+                  </View>
+                  <Text style={styles.careerItemText}>
+                    {careerStatement.split('\n\n')[index].split('\n')[1]}
+                  </Text>
+                </View>
+              ))}
+            </View>
+          ) : (
+            <Text style={styles.careerSubtitle}>커리어 소개와 핵심역량을 입력해보세요</Text>
+          )}
+        </View>
+
+        <View style={styles.bottomPadding} />
+
       </ScrollView>
+
+      <View style={styles.bottomButtonContainer}>
+      <TouchableOpacity style={styles.saveButton}>
+        <Text style={styles.saveButtonText}>저장하기</Text>
+      </TouchableOpacity>
+    </View>
     </SafeAreaView>
   );
 };
@@ -362,23 +401,6 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: 18,
     fontWeight: 'bold',
-  },
-  resumeTitleContainer: {
-    padding: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: '#e0e0e0',
-  },
-  resumeTitleLabel: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    marginBottom: 8,
-  },
-  resumeTitleInput: {
-    fontSize: 16,
-    padding: 8,
-    borderWidth: 1,
-    borderColor: '#e0e0e0',
-    borderRadius: 4,
   },
   profileContainer: {
     flexDirection: 'row',
@@ -409,9 +431,7 @@ const styles = StyleSheet.create({
     padding: 16,
     borderBottomWidth: 1,
     borderBottomColor: '#e0e0e0',
-  },
-  careerHeader: {
-    marginBottom: 16,
+    marginTop: 24,
   },
   careerTitle: {
     fontSize: 24,
@@ -422,27 +442,35 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#666',
     marginTop: 4,
+    marginBottom: 16,
   },
   careerContent: {
-    backgroundColor: '#f8f8f8',
-    borderRadius: 8,
     padding: 16,
   },
-  careerContentHeader: {
-    position: 'absolute',
-    top: 8,
-    right: 8,
-    zIndex: 1,
+  careerItemBox: {
+    backgroundColor: '#f8f8f8',
+    borderRadius: 8,
+    padding: 20,
+    marginBottom: 16,
+    borderWidth: 1,
+    borderColor: '#e0e0e0',
+    width: '100%',
+  },
+  careerItemHeader: {
+    marginBottom: 12,
+  },
+  careerItemTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#333',
   },
   moreButton: {
     padding: 4,
   },
-  careerTextContainer: {
-    minHeight: 100,
-  },
-  careerText: {
-    fontSize: 16,
-    color: '#333',
+  careerItemText: {
+    fontSize: 14,
+    color: '#666',
+    lineHeight: 20,
   },
   educationSection: {
     padding: 16,
@@ -577,6 +605,31 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#666',
     marginTop: 2,
+  },
+  bottomButtonContainer: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    backgroundColor: 'white',
+    padding: 16,
+    borderTopWidth: 1,
+    borderTopColor: '#e0e0e0',
+    paddingBottom: Platform.OS === 'ios' ? 34 : 24,
+  },
+  saveButton: {
+    backgroundColor: '#4a90e2',
+    padding: 16,
+    borderRadius: 8,
+    alignItems: 'center',
+  },
+  saveButtonText: {
+    color: 'white',
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
+  bottomPadding: {
+    height: Platform.OS === 'ios' ? 90 : 100,
   },
 });
 

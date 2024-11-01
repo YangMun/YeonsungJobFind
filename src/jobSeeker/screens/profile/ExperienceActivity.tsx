@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, SafeAreaView, TouchableOpacity, TextInput, ScrollView, Modal, Alert } from 'react-native';
+import { View, Text, StyleSheet, SafeAreaView, TouchableOpacity, TextInput, ScrollView, Modal, Alert} from 'react-native';
 import { Ionicons, MaterialIcons } from '@expo/vector-icons';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useAuth } from '../../../context/AuthContext';
 import axios from 'axios';
-import { formatExperienceDate, ActivityItem, validateExperienceActivity, ExperienceActivityData } from '../../../common/utils/validationUtils';
+import { formatExperienceDate, ActivityItem, API_URL  } from '../../../common/utils/validationUtils';
 
 type RootStackParamList = {
   ProfileEditView: undefined;
@@ -54,7 +54,7 @@ const ExperienceActivityEducationForm = () => {
   };
 
   const handleDescriptionChange = (text: string) => {
-    if (text.length <= 270) {
+    if (text.length <= 500) {
       setDescription(text);
     }
   };
@@ -66,14 +66,9 @@ const ExperienceActivityEducationForm = () => {
     }
 
     try {
-      const baseURL = Platform.select({
-        ios: 'http://localhost:3000',
-        android: 'http://10.0.2.2:3000',
-        default: 'http://localhost:3000'
-      });
       let response;
       if (mode === 'add') {
-        response = await axios.post(`${baseURL}/api/save-experience-activity`, {
+        response = await axios.post(`${API_URL}/api/save-experience-activity`, {
           jobSeekerId: userId,
           activityType,
           organization,
@@ -82,7 +77,8 @@ const ExperienceActivityEducationForm = () => {
           description
         });
       } else {
-        response = await axios.put(`${baseURL}/api/update-experience-activity/${activityId}`, {
+        response = await axios.put(`${API_URL}/api/update-experience-activity/${activityId}`, {
+          jobSeekerId: userId,
           activityType,
           organization,
           startDate,
@@ -194,7 +190,7 @@ const ExperienceActivityEducationForm = () => {
             onChangeText={handleStartDateChange}
             placeholder="YYYYMM"
             keyboardType="numeric"
-            maxLength={6}
+            maxLength={7}
           />
           <Text style={styles.dateSeparator}>~</Text>
           <TextInput
@@ -203,7 +199,7 @@ const ExperienceActivityEducationForm = () => {
             onChangeText={handleEndDateChange}
             placeholder="YYYYMM"
             keyboardType="numeric"
-            maxLength={6}
+            maxLength={7}
           />
         </View>
 
@@ -216,7 +212,7 @@ const ExperienceActivityEducationForm = () => {
             placeholder="활동내역을 입력하세요"
             multiline
             numberOfLines={4}
-            maxLength={270}
+            maxLength={500}
           />
           <Text style={styles.charCount}>{description.length}/500자</Text>
         </View>

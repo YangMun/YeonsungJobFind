@@ -117,16 +117,26 @@ CREATE TABLE certifications (
     acquisition_date DATE NOT NULL,
     FOREIGN KEY (jobSeeker_id) REFERENCES jobSeeker(id)
 );
-
-
--- job_applications 테이블 생성
-CREATE TABLE job_applications (
-    ->     id INT AUTO_INCREMENT PRIMARY KEY,
-    ->     job_id INT NOT NULL,                -- 지원한 공고 ID
-    ->     jobSeeker_id VARCHAR(15) NOT NULL,  -- 지원자 ID
-    ->     status ENUM('검토중', '합격', '불합격') DEFAULT '검토중',  -- 지원 상태
-    ->     application_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,  -- 지원 일자
-    ->     FOREIGN KEY (job_id) REFERENCES PostJob(id),
-    ->     FOREIGN KEY (jobSeeker_id) REFERENCES jobSeeker(id),
-    ->     UNIQUE KEY unique_application (job_id, jobSeeker_id)  -- 중복 지원 방지
-    -> );
+-- 자기소개서 테이블 생성
+CREATE TABLE career_statements (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    jobSeeker_id VARCHAR(15) NOT NULL,  -- 구직자 ID (외래키)
+    growth_process TEXT,           -- 성장과정 (500자 제한)
+    personality TEXT,              -- 성격(장단점) (500자 제한)
+    motivation TEXT,               -- 지원동기 (500자 제한)
+    aspiration TEXT,               -- 입사 후 포부 (500자 제한)
+    career_history TEXT,           -- 경력사항 (500자 제한)
+    FOREIGN KEY (jobSeeker_id) REFERENCES jobSeeker(id)
+);
+--
+CREATE TABLE JobPost_Status (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    job_id INT NOT NULL,
+    jobSeeker_id VARCHAR(15) NOT NULL,
+    application_status VARCHAR(20) DEFAULT '지원 완료/검토중',  -- '지원 완료/검토중', '합격', '불합격'
+    applied_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, -- 지원 시점
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP, -- 상태 변경 시점
+    FOREIGN KEY (job_id) REFERENCES PostJob(id),
+    FOREIGN KEY (jobSeeker_id) REFERENCES jobSeeker(id),
+    UNIQUE KEY unique_application (job_id, jobSeeker_id)  -- 동일한 공고에 중복 지원 방지
+);
