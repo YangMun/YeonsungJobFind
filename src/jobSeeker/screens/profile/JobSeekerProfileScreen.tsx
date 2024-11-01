@@ -119,6 +119,14 @@ const JobSeekerProfileScreen = () => {
               icon="mail" 
               text={profileInfo?.email ? maskEmail(profileInfo.email) : '이메일 없음'} 
             />
+
+          </View>
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>My career</Text>
+            <Text style={styles.careerContent}>
+              SQL 및 Python 기술을 보유한 신입입니다. 연성대학교에서 컴퓨터 소프트웨어과를 전공하여 2024년 2월에 졸업 예정입니다.{'\n\n'}
+              2024년 3월 전공 심화반으로 4학년 재학 예정이며, sqld를 취득하고 현재 sqlp에 도전하고 있습니다.
+            </Text>
           </View>
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>학력</Text>

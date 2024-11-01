@@ -453,7 +453,7 @@ app.get('/api/jobseeker-profile-summary/:jobSeekerId', async (req, res) => {
   }
 });
 
-// 구직자 력 정보 저장 API
+// 구직자 경력 정보 저장 API
 app.post('/api/save-grad-info', async (req, res) => {
   const { jobSeekerId, universityType, schoolName, region, admissionDate, graduationDate, graduationStatus, major } = req.body;
   
@@ -1029,6 +1029,84 @@ app.post('/api/job-status-insert', async (req, res) => {
   } catch (error) {
     console.error('데이터베이스 오류:', error);
     res.status(500).json({ success: false });
+  }
+});
+
+//지원자 목록 확인
+app.get('/api/employer/all-applicants/:employerId', async (req, res) => {
+  const { employerId } = req.params;
+  
+  try {
+    const [applications] = await pool.query(`
+      SELECT 
+        p.id as application_id,
+        p.jobSeeker_id,
+        p.job_id,
+        p.application_status,
+        p.applied_at,
+        j.title as job_title,
+        n.name,
+        g.school_name
+      FROM PostJob_apply p
+      INNER JOIN PostJob j ON p.job_id = j.id
+      LEFT JOIN NormalInformation n ON p.jobSeeker_id = n.jobSeeker_id
+      LEFT JOIN GradeInformation g ON p.jobSeeker_id = g.jobSeeker_id
+      WHERE j.employer_id = ?
+    `, [employerId]);
+
+    res.json({
+      success: true,
+      applications: applications
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: '서버 오류가 발생했습니다.'
+    });
+  }
+});
+
+// 지원자 상태 업데이트 API
+app.put('/api/employer/update-application-status', async (req, res) => {
+  const { applicationId, status } = req.body;
+  
+  try {
+    // 파라미터 로그
+    console.log('Update Status Parameters:', { applicationId, status });
+
+    const [result] = await pool.query(`
+      UPDATE PostJob_apply 
+      SET application_status = ?
+      WHERE id = ?
+    `, [status, applicationId]);
+
+    // 업데이트 결과 로그
+    console.log('Update Result:', result);
+
+    if (result.affectedRows > 0) {
+      res.json({
+        success: true,
+        message: '지원자 상태가 성공적으로 업데이트되었습니다.'
+      });
+    } else {
+      res.status(404).json({
+        success: false,
+        message: '해당하는 지원 정보를 찾을 수 없습니다.'
+      });
+    }
+  } catch (error) {
+    console.error('지원자 상태 업데이트 오류:', error);
+    console.error('Error details:', {
+      message: error.message,
+      sqlMessage: error.sqlMessage,
+      sqlState: error.sqlState
+    });
+    
+    res.status(500).json({
+      success: false,
+      message: '서버 오류가 발생했습니다.',
+      error: error.message
+    });
   }
 });
 
