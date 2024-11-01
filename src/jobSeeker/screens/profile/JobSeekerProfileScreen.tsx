@@ -119,6 +119,7 @@ const JobSeekerProfileScreen = () => {
               icon="mail" 
               text={profileInfo?.email ? maskEmail(profileInfo.email) : '이메일 없음'} 
             />
+
           </View>
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>My career</Text>
@@ -336,10 +337,6 @@ const styles = StyleSheet.create({
   },
   infoItemContent: {
     fontSize: 16,
-  },
-  careerContent: {
-    fontSize: 16,
-    lineHeight: 24,
   },
   sectionSubtitle: {
     fontSize: 16,
