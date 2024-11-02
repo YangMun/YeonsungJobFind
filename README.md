@@ -92,6 +92,7 @@ YEONSUNG_JOBFIND
 - PostJob: 구인 공고 정보
 - certifications: 자격 및 면허 
 - career_statements: 자기소개서 정보 
+- JobPost_Status: 공고에 대한 지원자 관련 테이블
 
 ## 설치 및 실행 방법
 1. 저장소 클론:
