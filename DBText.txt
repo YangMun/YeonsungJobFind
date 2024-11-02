@@ -118,7 +118,7 @@ CREATE TABLE certifications (
     acquisition_date DATE NOT NULL,
     FOREIGN KEY (jobSeeker_id) REFERENCES jobSeeker(id)
 );
-
+--------------------------------
 -- 자기소개서 테이블 생성
 CREATE TABLE career_statements (
     id INT AUTO_INCREMENT PRIMARY KEY,
@@ -133,7 +133,6 @@ CREATE TABLE career_statements (
 --------------------------------
 -- 구직 공고에 대한 지원자 관리 테이블
 CREATE TABLE PostJob_apply (
-
     id INT AUTO_INCREMENT PRIMARY KEY,
     job_id INT NOT NULL,
     jobSeeker_id VARCHAR(15) NOT NULL,
@@ -143,6 +142,4 @@ CREATE TABLE PostJob_apply (
     FOREIGN KEY (job_id) REFERENCES PostJob(id),
     FOREIGN KEY (jobSeeker_id) REFERENCES jobSeeker(id),
     UNIQUE KEY unique_application (job_id, jobSeeker_id)  -- 동일한 공고에 중복 지원 방지
-
 );
-
