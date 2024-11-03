@@ -129,3 +129,6 @@ YEONSUNG_JOBFIND
 - react-native-gesture-handler: 터치 및 제스처 핸들링
 - react-native-safe-area-context: 안전 영역 관리
 - @expo/vector-icons: 아이콘 사용
+
+5. 요구사항 정의서
+   https://docs.google.com/spreadsheets/d/1T9phCBWEQ1-OnmJrxJjEEn7jb5KPngKXyDzuel_pFP0/edit?usp=sharing
