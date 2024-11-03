@@ -5,7 +5,7 @@ import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useAuth } from '../../../context/AuthContext';
 import axios from 'axios';
-import { API_URL } from '../../../common/utils/validationUtils';
+import { API_URL, validateCareerSections } from '../../../common/utils/validationUtils';
 
 type RootStackParamList = {
   ProfileEditView: { updatedCareerText: string } | undefined;
@@ -59,6 +59,12 @@ const MyCareerEditView = () => {
 
   const handleSave = async () => {
     try {
+      const validationResult = validateCareerSections(careerSections);
+      if (!validationResult.isValid) {
+        Alert.alert('입력 오류', validationResult.message);
+        return;
+      }
+
       const endpoint = route.params?.initialCareerText 
         ? `${API_URL}/api/update-career-statement/${userId}`
         : `${API_URL}/api/save-career-statement`;
@@ -141,12 +147,14 @@ const MyCareerEditView = () => {
   };
 
   const updateSectionText = (index: number, newText: string) => {
-    const updatedSections = [...careerSections];
-    updatedSections[index] = {
-      ...updatedSections[index],
-      text: newText
-    };
-    setCareerSections(updatedSections);
+    if (newText.length <= 500) {
+      const updatedSections = [...careerSections];
+      updatedSections[index] = {
+        ...updatedSections[index],
+        text: newText
+      };
+      setCareerSections(updatedSections);
+    }
   };
 
   return (
@@ -168,6 +176,7 @@ const MyCareerEditView = () => {
               placeholder={`${section.title}을(를) 입력하세요`}
               value={section.text}
               onChangeText={(text) => updateSectionText(index, text)}
+              maxLength={500}
             />
             <Text style={styles.characterCount}>{section.text.length}/500자</Text>
           </View>

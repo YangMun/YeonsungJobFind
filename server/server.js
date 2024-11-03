@@ -453,7 +453,7 @@ app.get('/api/jobseeker-profile-summary/:jobSeekerId', async (req, res) => {
   }
 });
 
-// 구직자 ��력 정보 저장 API
+// 구직자 력 정보 저장 API
 app.post('/api/save-grad-info', async (req, res) => {
   const { jobSeekerId, universityType, schoolName, region, admissionDate, graduationDate, graduationStatus, major } = req.body;
   
@@ -1004,5 +1004,32 @@ app.delete('/api/delete-career-statement/:jobSeekerId', async (req, res) => {
   }
 });
 
+// 구인 공고 지원 API
+app.post('/api/job-status-insert', async (req, res) => {
+  const { jobId, jobSeekerId } = req.body;
+
+  try {
+    // 이미 지원한 공고인지 확인
+    const [existingApplication] = await pool.query(
+      'SELECT * FROM JobPost_Status WHERE job_id = ? AND jobSeeker_id = ?',
+      [jobId, jobSeekerId]
+    );
+
+    if (existingApplication.length > 0) {
+      return res.json({ success: false });
+    }
+
+    // 새로운 지원 정보 저장
+    await pool.query(
+      'INSERT INTO JobPost_Status (job_id, jobSeeker_id) VALUES (?, ?)',
+      [jobId, jobSeekerId]
+    );
+
+    res.json({ success: true });
+  } catch (error) {
+    console.error('데이터베이스 오류:', error);
+    res.status(500).json({ success: false });
+  }
+});
 const PORT = 3000;
 app.listen(PORT, () => console.log(`서버가 http://localhost:${PORT} 에서 실행 중입니다.`));

@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, SafeAreaView, TouchableOpacity, TextInput, ScrollView, Modal, Alert, Platform} from 'react-native';
+import { View, Text, StyleSheet, SafeAreaView, TouchableOpacity, TextInput, ScrollView, Modal, Alert} from 'react-native';
 import { Ionicons, MaterialIcons } from '@expo/vector-icons';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useAuth } from '../../../context/AuthContext';
 import axios from 'axios';
-import { formatExperienceDate, ActivityItem, API_URL } from '../../../common/utils/validationUtils';
+import { formatExperienceDate, ActivityItem, API_URL  } from '../../../common/utils/validationUtils';
 
 type RootStackParamList = {
   ProfileEditView: undefined;
@@ -54,7 +54,7 @@ const ExperienceActivityEducationForm = () => {
   };
 
   const handleDescriptionChange = (text: string) => {
-    if (text.length <= 270) {
+    if (text.length <= 500) {
       setDescription(text);
     }
   };
@@ -107,40 +107,6 @@ const ExperienceActivityEducationForm = () => {
   const handleEndDateChange = (text: string) => {
     const formattedDate = formatExperienceDate(text);
     setEndDate(formattedDate);
-  };
-
-  const handleDelete = async () => {
-    try {
-
-      Alert.alert(
-        '삭제 확인',
-        '이 활동을 삭제하시겠습니까?',
-        [
-          {
-            text: '취소',
-            style: 'cancel'
-          },
-          {
-            text: '삭제',
-            style: 'destructive',
-            onPress: async () => {
-              const response = await axios.delete(
-                `${API_URL}/api/delete-experience-activity/${activityId}/${userId}`
-              );
-              if (response.data.success) {
-                Alert.alert('성공', '활동이 삭제되었습니다.');
-                navigation.goBack();
-              } else {
-                Alert.alert('오류', response.data.message);
-              }
-            }
-          }
-        ]
-      );
-    } catch (error) {
-      console.error('API 요청 오류:', error);
-      Alert.alert('오류', '서버 오류가 발생했습니다.');
-    }
   };
 
   return (
@@ -246,21 +212,15 @@ const ExperienceActivityEducationForm = () => {
             placeholder="활동내역을 입력하세요"
             multiline
             numberOfLines={4}
-            maxLength={270}
+            maxLength={500}
           />
           <Text style={styles.charCount}>{description.length}/500자</Text>
         </View>
       </ScrollView>
       <View style={styles.footer}>
-        {mode === 'edit' ? (
-          <TouchableOpacity style={[styles.cancelButton, { backgroundColor: '#ff4444' }]} onPress={handleDelete}>
-            <Text style={[styles.cancelButtonText, { color: '#fff' }]}>삭제</Text>
-          </TouchableOpacity>
-        ) : (
-          <TouchableOpacity style={styles.cancelButton} onPress={() => navigation.goBack()}>
-            <Text style={styles.cancelButtonText}>취소</Text>
-          </TouchableOpacity>
-        )}
+        <TouchableOpacity style={styles.cancelButton} onPress={() => navigation.goBack()}>
+          <Text style={styles.cancelButtonText}>취소</Text>
+        </TouchableOpacity>
         <TouchableOpacity style={styles.submitButton} onPress={handleSubmit}>
           <Text style={styles.submitButtonText}>{mode === 'add' ? '추가' : '수정'}</Text>
         </TouchableOpacity>
