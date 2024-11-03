@@ -131,4 +131,4 @@ YEONSUNG_JOBFIND
 - @expo/vector-icons: 아이콘 사용
 
 5. 요구사항 정의서
-https://docs.google.com/spreadsheets/d/1T9phCBWEQ1-OnmJrxJjEEn7jb5KPngKXyDzuel_pFP0/edit?usp=sharing
+   https://docs.google.com/spreadsheets/d/1T9phCBWEQ1-OnmJrxJjEEn7jb5KPngKXyDzuel_pFP0/edit?usp=sharing
