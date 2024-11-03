@@ -106,7 +106,7 @@ YEONSUNG_JOBFIND
    ```
 3. 앱 실행:
    ```
-   mpx expo start 
+   npx expo start 
    -> i (ios)
    -> a (안드로이드)
    -> r (재실행)
