@@ -598,3 +598,44 @@ export const maskEmail = (email: string): string => {
   const maskedUsername = username.slice(0, 3) + '*'.repeat(username.length - 3);
   return `${maskedUsername}@${domain}`;
 };
+
+//채용공고 상태 인터페이스 추가
+export interface JobPostStatus {
+  id: number;
+  job_id: number;
+  jobSeeker_id: string;
+  application_status: '합격' | '불합격' | '지원 완료/검토중';
+  applied_at: string;
+  updated_at: string;
+}
+
+//채용공고 지원자 정보 인터페이스 추가
+export interface JobPostDetail {
+  id: number;
+  jobSeeker_id: string;    // 추가
+  job_id: number;          // 추가
+  application_status: '지원 완료/검토중' | '합격' | '불합격';
+  jobPost: {
+    title: string;
+    company_name: string;
+  };
+  applicant: {
+    name: string;
+    email: string;
+    phone: string;
+    birthDate: string;
+    education: {
+      university_type: string;
+      school_name: string;
+      major: string;
+      graduation_status: string;
+    };
+    careerStatement: {
+      growth_process: string;
+      personality: string;
+      motivation: string;
+      aspiration: string;
+      career_history: string;
+    };
+  };
+}
