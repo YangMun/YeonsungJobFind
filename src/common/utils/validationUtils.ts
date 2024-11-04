@@ -595,13 +595,14 @@ export interface JobPostStatus {
   application_status: '합격' | '불합격' | '지원 완료/검토중';
   applied_at: string;
   updated_at: string;
+  qualification_type: string;
 }
 
 //채용공고 지원자 정보 인터페이스 추가
 export interface JobPostDetail {
   id: number;
-  jobSeeker_id: string;    // 추가
-  job_id: number;          // 추가
+  jobSeeker_id: string;    
+  job_id: number;         
   application_status: '지원 완료/검토중' | '합격' | '불합격';
   jobPost: {
     title: string;

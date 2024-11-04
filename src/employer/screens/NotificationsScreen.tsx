@@ -23,7 +23,21 @@ const NotificationsScreen = () => {
     try {
       const response = await axios.get(`${API_URL}/api/employer/applications/${userId}`);
       if (response.data.success) {
-        setApplications(response.data.applications);
+        const applicationsWithJobDetails = await Promise.all(
+          response.data.applications.map(async (application: any) => {
+            try {
+              const jobResponse = await axios.get(`${API_URL}/api/job-detail/${application.job_id}`);
+              return {
+                ...application,
+                qualification_type: jobResponse.data.job.qualification_type
+              };
+            } catch (error) {
+              console.error(`공고 정보 조회 실패 (job_id: ${application.job_id}):`, error);
+              return application;
+            }
+          })
+        );
+        setApplications(applicationsWithJobDetails);
       }
     } catch (error) {
       console.error('지원자 목록 조회 실패:', error);
@@ -103,6 +117,9 @@ const NotificationsScreen = () => {
       <View style={styles.applicationInfo}>
         <Text style={styles.statusText}>{item.application_status}</Text>
         <Text style={styles.dateText}>지원일: {new Date(item.applied_at).toLocaleDateString()}</Text>
+        <Text style={styles.qualificationText}>
+          {item.qualification_type || '지원자격 정보 없음'}
+        </Text>
       </View>
       <Ionicons name="chevron-forward" size={24} color="#666" />
     </TouchableOpacity>
@@ -196,18 +213,23 @@ const NotificationsScreen = () => {
   return (
     <SafeAreaView style={styles.container}>
       <FlatList
-        data={applications}
-        renderItem={renderApplication}
-        keyExtractor={item => item.id.toString()}
-        refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
-        }
-        ListEmptyComponent={
-          <View style={styles.emptyContainer}>
-            <Text style={styles.emptyText}>아직 지원자가 없습니다.</Text>
-          </View>
-        }
-      />
+  ListHeaderComponent={
+    <View style={styles.headerContainer}>
+      <Text style={styles.headerTitle}>지원자</Text>
+    </View>
+  }
+  data={applications}
+  renderItem={renderApplication}
+  keyExtractor={item => item.id.toString()}
+  refreshControl={
+    <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+  }
+  ListEmptyComponent={
+    <View style={styles.emptyContainer}>
+      <Text style={styles.emptyText}>아직 지원자가 없습니다.</Text>
+    </View>
+  }
+/>
       <ApplicantModal />
     </SafeAreaView>
   );
@@ -216,25 +238,40 @@ const NotificationsScreen = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fff',
+    backgroundColor: '#f5f5f5',
   },
   applicationItem: {
     flexDirection: 'row',
     alignItems: 'center',
     padding: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: '#e0e0e0',
+    backgroundColor: 'white',
+    marginHorizontal: 16,
+    marginVertical: 8,
+    borderRadius: 12,  
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
   },
   statusIndicator: {
-    marginRight: 12,
+    position: 'absolute',
+    left: 16,
+    top: '50%',
+    transform: [{ translateY: -12 }],
   },
   applicationInfo: {
     flex: 1,
+    marginLeft: 48,  // statusIndicator 아이콘을 위한 공간
   },
   statusText: {
-    fontSize: 16,
+    fontSize: 18,
     fontWeight: 'bold',
     marginBottom: 4,
+    color: '#333',
   },
   dateText: {
     fontSize: 14,
@@ -242,22 +279,24 @@ const styles = StyleSheet.create({
   },
   modalContainer: {
     flex: 1,
-    backgroundColor: '#fff',
+    backgroundColor: '#f5f5f5',
   },
   modalHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     padding: 16,
+    backgroundColor: 'white',
     borderBottomWidth: 1,
-    borderBottomColor: '#e0e0e0',
+    borderBottomColor: '#eee',
   },
   modalTitle: {
-    fontSize: 18,
+    fontSize: 20,
     fontWeight: 'bold',
+    color: '#333',
   },
   placeholder: {
-    width: 24, // ionicons 크기와 동일하게 맞춤
+    width: 24,
   },
   modalContent: {
     flex: 1,
@@ -265,6 +304,17 @@ const styles = StyleSheet.create({
   },
   section: {
     marginBottom: 24,
+    backgroundColor: 'white',
+    borderRadius: 12,
+    padding: 16,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 1,
+    },
+    shadowOpacity: 0.05,
+    shadowRadius: 2,
+    elevation: 2,
   },
   sectionTitle: {
     fontSize: 18,
@@ -276,6 +326,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: 'bold',
     marginBottom: 4,
+    color: '#333',
   },
   companyName: {
     fontSize: 14,
@@ -286,29 +337,39 @@ const styles = StyleSheet.create({
     fontSize: 15,
     marginBottom: 8,
     color: '#444',
+    backgroundColor: '#f8f9fa',
+    padding: 8,
+    borderRadius: 6,
   },
   statementSection: {
     marginBottom: 16,
+    backgroundColor: '#f8f9fa',
+    padding: 12,
+    borderRadius: 8,
   },
   statementTitle: {
     fontSize: 16,
-    fontWeight: 'bold',
+    fontWeight: '600',
     marginBottom: 8,
-    color: '#444',
+    color: '#333',
   },
   statementContent: {
     fontSize: 14,
     lineHeight: 20,
     color: '#666',
-    backgroundColor: '#f5f5f5',
+    backgroundColor: '#fff',
     padding: 12,
     borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#eee',
   },
   actionButtons: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    paddingVertical: 16,
-    paddingHorizontal: 8,
+    padding: 16,
+    backgroundColor: 'white',
+    borderTopWidth: 1,
+    borderTopColor: '#eee',
   },
   actionButton: {
     flex: 1,
@@ -316,6 +377,14 @@ const styles = StyleSheet.create({
     margin: 8,
     borderRadius: 8,
     alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+    elevation: 2,
   },
   rejectButton: {
     backgroundColor: '#F44336',
@@ -324,7 +393,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#4CAF50',
   },
   buttonText: {
-    color: '#fff',
+    color: 'white',
     fontSize: 16,
     fontWeight: 'bold',
   },
@@ -333,83 +402,37 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     padding: 20,
+    marginTop: 100,
   },
   emptyText: {
     fontSize: 16,
     color: '#666',
     textAlign: 'center',
   },
-  refreshIndicator: {
-    padding: 16,
+  headerContainer: {
+    padding: 20,         
+    backgroundColor: 'white',  
+    borderBottomWidth: 1,      
+    borderBottomColor: '#eee', 
   },
-  loadingContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
+  headerTitle: {               
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: '#333',
   },
-  // 모달 내 스크롤뷰 스타일
-  scrollViewContent: {
-    flexGrow: 1,
-  },
-  // 지원자 정보 섹션 구분선
-  sectionDivider: {
-    height: 8,
-    backgroundColor: '#f5f5f5',
-    marginVertical: 16,
-  },
-  // 상태 뱃지 스타일
-  statusBadge: {
-    paddingHorizontal: 12,
-    paddingVertical: 4,
-    borderRadius: 12,
+  qualificationBadge: {
+    backgroundColor: '#E3F2FD',  
+    paddingHorizontal: 8,
+    paddingVertical: 2,        
+    borderRadius: 4,
+    marginTop: 4,
     alignSelf: 'flex-start',
   },
-  statusBadgeText: {
-    color: '#fff',
-    fontSize: 12,
-    fontWeight: 'bold',
-  },
-  // 상태별 뱃지 색상
-  pendingBadge: {
-    backgroundColor: '#FFC107',
-  },
-  acceptedBadge: {
-    backgroundColor: '#4CAF50',
-  },
-  rejectedBadge: {
-    backgroundColor: '#F44336',
-  },
-  // 정보 레이블 스타일
-  label: {
+  qualificationText: {
     fontSize: 14,
     color: '#666',
-    marginBottom: 4,
+    marginTop: 4,
   },
-  value: {
-    fontSize: 16,
-    color: '#333',
-    marginBottom: 12,
-  },
-  // 자기소개서 내용 스타일
-  statementBox: {
-    backgroundColor: '#f9f9f9',
-    padding: 16,
-    borderRadius: 8,
-    marginBottom: 16,
-  },
-  // 하단 버튼 컨테이너
-  bottomButtonContainer: {
-    padding: 16,
-    backgroundColor: '#fff',
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: -2,
-    },
-    shadowOpacity: 0.1,
-    shadowRadius: 3,
-    elevation: 5,
-  }
- });
+});
 
 export default NotificationsScreen;
