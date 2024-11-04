@@ -104,11 +104,23 @@ app.post('/api/signup-employer', async (req, res) => {
 // 로그인 API
 app.post('/api/login', async (req, res) => {
   const { userType, id, password } = req.body; 
-  
+
   try {
-    let table = userType === 'jobSeeker' ? 'jobSeeker' : 'employer';
-    const [rows] = await pool.query(`SELECT * FROM ${table} WHERE id = ? AND password = ?`, [id, password]);  
+    let table;
     
+    // userType에 따라 테이블을 선택
+    if (userType === 'jobSeeker') {
+      table = 'jobSeeker';
+    } else if (userType === 'employer') {
+      table = 'employer';
+    } else if (userType === 'manager') {
+      table = 'manager'; // manager 테이블 추가
+    } else {
+      return res.status(400).json({ success: false, message: '유효하지 않은 사용자 유형입니다.' });
+    }
+
+    const [rows] = await pool.query(`SELECT * FROM ${table} WHERE id = ? AND password = ?`, [id, password]);  
+
     if (rows.length > 0) {
       res.json({ success: true, userType, message: '로그인 성공' });
     } else {

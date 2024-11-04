@@ -65,7 +65,10 @@ YEONSUNG_JOBFIND
 │   │   └── utils: 구직자 관련 유틸리티 함수
 │   ├── manager
 │   │   ├── components: 관리자 관련 컴포넌트 (향후 구현 예정)
-│   │   ├── screens: 관리자 화면 (향후 구현 예정)
+│   │   ├── screens
+│   │   │   ├── ManagerMain.tsx : 매니저 메인 화면
+│   │   │   ├── PostManagementScreen.tsx : 회원 관리 화면 
+│   │   │   └── UserManagementScreen.tsx : 게시글 관리 화면
 │   │   └── utils: 관리자 관련 유틸리티 (향후 구현 예정)
 │   ├── navigation
 │   │   └── AppNavigator.tsx: 앱 전체 네비게이션 구조 정의
@@ -75,6 +78,7 @@ YEONSUNG_JOBFIND
 ├── app.json: Expo 설정 파일
 ├── App.tsx: 앱의 진입점, 전체 구조 정의
 ├── babel.config.js: Babel 설정 파일
+├── DBText.txt
 ├── package-lock.json: 프로젝트 의존성 버전 고정 파일
 ├── package.json: 프로젝트 설정 및 의존성 정의
 └── tsconfig.json: TypeScript 설정 파일

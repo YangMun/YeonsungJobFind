@@ -238,7 +238,7 @@ export const signUpEmployer = async (
 };
 
 export const login = async (
-  userType: 'jobSeeker' | 'employer',
+  userType: 'jobSeeker' | 'employer' | 'manager',
   id: string,
   password: string
 ): Promise<SignUpResult> => {
@@ -250,6 +250,7 @@ export const login = async (
     return { success: false, message: '서버 오류가 발생했습니다. 나중에 다시 시도해주세요.' };
   }
 };
+
 
 export const validatePostJob = (data: PostJobData): PostJobValidationResult => {
   // 1. 모든 필드가 입력되었는 확인
