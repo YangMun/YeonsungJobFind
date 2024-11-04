@@ -15,6 +15,7 @@ import MyCareerEditView from '../jobSeeker/screens/profile/MyCareerEditView';
 import GradInfo from '../jobSeeker/screens/profile/GradInfo';
 import ExperienceActivityEducationForm from '../jobSeeker/screens/profile/ExperienceActivity';
 import CertificationForm from '../jobSeeker/screens/profile/CertificationForm';
+import ManagerMain from '../manager/ManagerMain';
 
 export type RootStackParamList = {
   Login: undefined;
@@ -31,6 +32,7 @@ export type RootStackParamList = {
   GradInfo: undefined;
   ExperienceActivityEducationForm: undefined;
   CertificationForm: undefined;
+  ManagerMain: undefined;
 };
 
 const Stack = createStackNavigator<RootStackParamList>();
@@ -95,6 +97,7 @@ const AppNavigator = () => {
           component={CertificationForm} 
           options={{ headerShown: false }}
         />
+        <Stack.Screen name="ManagerMain" component={ManagerMain} />
       </Stack.Navigator>
     </NavigationContainer>
   );

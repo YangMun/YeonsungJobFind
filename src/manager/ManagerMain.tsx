@@ -1,19 +1,17 @@
 import React from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Ionicons } from '@expo/vector-icons';
-import NotificationScreen from './NotificationScreen';
-import MessageScreen from './MessageScreen';
+import UserManagementScreen from './UserManagementScreen';
+import PostManagementScreen from './PostManagementScreen';
 
 type RootTabParamList = {
-  홈: undefined;
-  알림: undefined;
-  메시지: undefined;
-  프로필: undefined;
+  회원관리: undefined;
+  게시글관리: undefined;
 };
 
 const Tab = createBottomTabNavigator<RootTabParamList>();
 
-const JobSeekerMainScreen = () => {
+const ManagerMain = () => {
   return (
     <Tab.Navigator
       screenOptions={({ route }) => ({
@@ -21,26 +19,21 @@ const JobSeekerMainScreen = () => {
         tabBarIcon: ({ focused, color, size }) => {
           let iconName;
 
-          if (route.name === '홈') {
-            iconName = focused ? 'home' : 'home-outline';
-          } else if (route.name === '알림') {
-            iconName = focused ? 'notifications' : 'notifications-outline';
-          } else if (route.name === '메시지') {
-            iconName = focused ? 'mail' : 'mail-outline';
-          } else if (route.name === '프로필') {
-            iconName = focused ? 'person' : 'person-outline';
+          if (route.name === '회원관리') {
+            iconName = focused ? 'people' : 'people-outline';
+          } else if (route.name === '게시글관리') {
+            iconName = focused ? 'document-text' : 'document-text-outline';
           }
-
           return <Ionicons name={iconName as any} size={size} color={color} />;
         },
         tabBarActiveTintColor: '#4a90e2',
         tabBarInactiveTintColor: 'gray',
       })}
     >
-      <Tab.Screen name="알림" component={NotificationScreen} />
-      <Tab.Screen name="메시지" component={MessageScreen} />
+      <Tab.Screen name="회원관리" component={UserManagementScreen} />
+      <Tab.Screen name="게시글관리" component={PostManagementScreen} />
     </Tab.Navigator>
   );
 };
 
-export default JobSeekerMainScreen;
+export default ManagerMain;
