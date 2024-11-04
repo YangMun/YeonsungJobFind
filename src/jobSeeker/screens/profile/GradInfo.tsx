@@ -1,8 +1,8 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { View, Text, StyleSheet, SafeAreaView, TouchableOpacity, TextInput, ScrollView, Modal, Dimensions, Alert } from 'react-native';
+import { View, Text, StyleSheet, SafeAreaView, TouchableOpacity, TextInput, ScrollView, Modal, Dimensions, Alert, Platform } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation, useRoute } from '@react-navigation/native';
-import { formatDate, validateDate, validateGradInfo, GradInfoData } from '../../../common/utils/validationUtils';
+import { formatDate, validateDate, validateGradInfo, GradInfoData, API_URL } from '../../../common/utils/validationUtils';
 import axios from 'axios';
 import { useAuth } from '../../../context/AuthContext';
 
@@ -91,9 +91,32 @@ const GradInfo = () => {
     }
   };
 
-  const handleDateChange = (text: string, setDate: React.Dispatch<React.SetStateAction<string>>) => {
-    const formattedDate = formatDate(text);
-    setDate(formattedDate);
+  const handleDateChange = (text: string, setter: (value: string) => void) => {
+    // 숫자만 추출
+    const numbers = text.replace(/[^0-9]/g, '');
+    
+    if (numbers.length <= 6) {
+      if (numbers.length > 4) {
+        const year = numbers.slice(0, 4);
+        let month = numbers.slice(4);
+        
+        // 월 처리 로직
+        if (month.length === 1) {
+          // 한 자리 숫자일 경우 그대로 표시
+          setter(`${year}.${month}`);
+        } else if (month.length === 2) {
+          const monthNum = parseInt(month);
+          if (monthNum > 12) {
+            // 12를 초과하는 경우 마지막 입력된 숫자만 사용
+            month = month[1];
+          }
+          // 01~12 사이의 값으로 설정
+          setter(`${year}.${month.padStart(2, '0')}`);
+        }
+      } else {
+        setter(numbers);
+      }
+    }
   };
 
   const handleComplete = async () => {
@@ -116,14 +139,8 @@ const GradInfo = () => {
     const validationResult = validateGradInfo(gradInfoData);
     if (validationResult.isValid) {
       try {
-        const baseURL = Platform.select({
-          ios: 'http://localhost:3000',
-          android: 'http://10.0.2.2:3000',
-          default: 'http://localhost:3000'
-        });
-
         let response;
-        response = await axios.post(`${baseURL}/api/save-grad-info`, gradInfoData);
+        response = await axios.post(`${API_URL}/api/save-grad-info`, gradInfoData);
         
         if (response.data.success) {
           console.log(mode === 'edit' ? "학력 정보가 성공적으로 수정되었습니다." : "학력 정보가 성공적으로 저장되었습니다.");
@@ -158,7 +175,7 @@ const GradInfo = () => {
           text: '삭제',
           onPress: async () => {
             try {
-              const response = await axios.delete(`http://localhost:3000/api/delete-grad-info/${userId}`);
+              const response = await axios.delete(`${API_URL}/api/delete-grad-info/${userId}`);
               if (response.data.success) {
                 Alert.alert('성공', '학력 정보가 성공적으로 삭제되었습니다.');
                 navigation.goBack();

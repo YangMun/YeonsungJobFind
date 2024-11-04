@@ -5,15 +5,9 @@ import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { RootStackParamList } from '../../navigation/AppNavigator';
 import { Ionicons } from '@expo/vector-icons';
+import { API_URL, Job } from '../../common/utils/validationUtils';
 
-interface Job {
-  id: number;
-  title: string;
-  company_name: string;
-  contents: string;
-  recruitment_deadline: string;
-  location: string;
-}
+
 
 type HomeScreenNavigationProp = StackNavigationProp<RootStackParamList, 'JobSeekerMain'>;
 
@@ -37,13 +31,8 @@ const HomeScreen: React.FC = () => {
 
   const fetchJobs = useCallback(async () => {
     try {
-      const baseURL = Platform.select({
-        ios: 'http://localhost:3000',
-        android: 'http://10.0.2.2:3000',
-        default: 'http://localhost:3000'
-      });
       const departments = selectedDepartments.join(',');
-      const response = await axios.get(`${baseURL}/api/all-jobs?status=${activeTab}&departments=${departments}`);
+      const response = await axios.get(`${API_URL}/api/all-jobs?status=${activeTab}&departments=${departments}`);
       if (response.data.success) {
         setJobs(response.data.jobs);
       }
@@ -100,12 +89,7 @@ const HomeScreen: React.FC = () => {
 
   const fetchDepartments = useCallback(async () => {
     try {
-      const baseURL = Platform.select({
-        ios: 'http://localhost:3000',
-        android: 'http://10.0.2.2:3000',
-        default: 'http://localhost:3000'
-      });
-      const response = await axios.get(`${baseURL}/api/departments`);
+      const response = await axios.get(`${API_URL}/api/departments`);
       if (response.data.success) {
         setDepartments(response.data.departments);
       }

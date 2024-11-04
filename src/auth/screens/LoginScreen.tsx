@@ -12,6 +12,7 @@ type RootStackParamList = {
   SignUp: undefined;
   JobSeekerMain: undefined;
   EmployerMain: undefined;
+  ManagerMain: undefined;
 };
 
 type LoginScreenNavigationProp = StackNavigationProp<RootStackParamList, 'Login'>;
@@ -19,17 +20,29 @@ type LoginScreenNavigationProp = StackNavigationProp<RootStackParamList, 'Login'
 const LoginScreen = () => {
   const navigation = useNavigation<LoginScreenNavigationProp>();
   const { setUserId } = useAuth();
-  const [userType, setUserType] = useState<'jobSeeker' | 'employer'>('jobSeeker');
+  const [userType, setUserType] = useState<'jobSeeker' | 'employer' | 'manager'>('jobSeeker');
   const [id, setId] = useState('');
   const [password, setPassword] = useState('');
 
   const handleLogin = async () => {
-    const result = await login(userType, id, password);
-    if (result.success) {
-      setUserId(id);  // 로그인 성공 시 사용자 ID 저장
-      navigation.navigate(userType === 'jobSeeker' ? 'JobSeekerMain' : 'EmployerMain');
+    // "manager" 타입인 경우 별도 네비게이션 처리
+    if (userType === 'manager') {
+      const result = await login('manager', id, password); // 타입 단언 사용
+      if (result.success) {
+        setUserId(id);
+        navigation.navigate('ManagerMain'); // "manager"일 때는 "ManagerMain"으로 이동
+      } else {
+        //Alert.alert('로그인 실패', result.message);
+      }
     } else {
-      Alert.alert('로그인 실패', result.message);
+      // 기존 로직 유지
+      const result = await login(userType as 'jobSeeker' | 'employer', id, password);
+      if (result.success) {
+        setUserId(id);
+        navigation.navigate(userType === 'jobSeeker' ? 'JobSeekerMain' : 'EmployerMain');
+      } else {
+        Alert.alert('로그인 실패', result.message);
+      }
     }
   };
 
@@ -37,7 +50,7 @@ const LoginScreen = () => {
     navigation.navigate('SignUp');
   };
 
-  const handleUserTypeChange = (newUserType: 'jobSeeker' | 'employer') => {
+  const handleUserTypeChange = (newUserType: 'jobSeeker' | 'employer' | 'manager') => {
     if (newUserType !== userType) {
       setUserType(newUserType);
       setId('');
@@ -67,6 +80,12 @@ const LoginScreen = () => {
             onPress={() => handleUserTypeChange('employer')}
           >
             <Text style={[styles.userTypeText, userType === 'employer' && styles.activeUserTypeText]}>구인자</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={[styles.userTypeButton, userType === 'manager' && styles.activeUserType]}
+            onPress={() => handleUserTypeChange('manager')}
+          >
+            <Text style={[styles.userTypeText, userType === 'manager' && styles.activeUserTypeText]}>관리자</Text>
           </TouchableOpacity>
         </View>
         <View style={styles.inputContainer}>
