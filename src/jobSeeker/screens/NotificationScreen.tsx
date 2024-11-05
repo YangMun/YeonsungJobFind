@@ -11,6 +11,8 @@ const getStatusColor = (status: string) => {
       return '#4CAF50';  // 초록색
     case '불합격':
       return '#FF4444';  // 빨간색
+    case '면접 요망':
+      return '#87CEEB';  // 하늘색
     default:
       return '#FFC107';  // 회색 (지원 완료/검토중)
   }
@@ -22,6 +24,8 @@ const getStatusIcon = (status: string) => {
       return 'checkmark-circle';  // O 표시
     case '불합격':
       return 'close-circle';      // X 표시
+    case '면접 요망':
+      return 'calendar';      // 캘린더 아이콘
     default:
       return 'time';             // 시계 아이콘 (지원 완료/검토중)
   }
