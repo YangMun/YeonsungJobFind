@@ -10,11 +10,13 @@ import { View, Text, StyleSheet, FlatList, TouchableOpacity, SafeAreaView,Modal,
 import { Ionicons } from '@expo/vector-icons';
 import axios from 'axios';
 import { useAuth } from '../../context/AuthContext';
-import { JobPostStatus, JobPostDetail, API_URL } from '../../common/utils/validationUtils';
+import { JobPostStatus, GroupedJobPost, JobPostDetail, API_URL } from '../../common/utils/validationUtils';
+
+
 
 const NotificationsScreen = () => {
   const { userId } = useAuth();
-  const [applications, setApplications] = useState<JobPostStatus[]>([]);
+  const [groupedApplications, setGroupedApplications] = useState<GroupedJobPost[]>([]);
   const [selectedApplicant, setSelectedApplicant] = useState<JobPostDetail | null>(null);
   const [showModal, setShowModal] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
@@ -23,21 +25,51 @@ const NotificationsScreen = () => {
     try {
       const response = await axios.get(`${API_URL}/api/employer/applications/${userId}`);
       if (response.data.success) {
-        const applicationsWithJobDetails = await Promise.all(
-          response.data.applications.map(async (application: any) => {
-            try {
-              const jobResponse = await axios.get(`${API_URL}/api/job-detail/${application.job_id}`);
-              return {
-                ...application,
-                qualification_type: jobResponse.data.job.qualification_type
-              };
-            } catch (error) {
-              console.error(`공고 정보 조회 실패 (job_id: ${application.job_id}):`, error);
-              return application;
+        const groupedData = new Map<number, GroupedJobPost>();
+        
+        await Promise.all(response.data.applications.map(async (application: JobPostStatus) => {
+          try {
+            const jobResponse = await axios.get(`${API_URL}/api/job-detail/${application.job_id}`);
+            const applicantResponse = await axios.get(
+              `${API_URL}/api/employer/applicant-detail/${application.jobSeeker_id}/${application.job_id}`
+            );
+            
+            const jobData = jobResponse.data.job;
+            const applicantData = applicantResponse.data.detail;
+            const applicantName = applicantData.applicant?.name || '이름 없음';
+            
+            let qualificationType = '지원자격 정보 없음';
+            
+            if (applicantData.jobApplication?.qualification_type) {
+              qualificationType = applicantData.jobApplication.qualification_type;
+            } else if (applicantData.application?.qualification_type) {
+              qualificationType = applicantData.application.qualification_type;
+            } else if (application.qualification_type) {
+              qualificationType = application.qualification_type;
+            } else if (jobData.qualification_type) {
+              qualificationType = jobData.qualification_type;
             }
-          })
-        );
-        setApplications(applicationsWithJobDetails);
+  
+            if (!groupedData.has(jobData.id)) {
+              groupedData.set(jobData.id, {
+                jobTitle: jobData.title,
+                jobId: jobData.id,
+                applicants: []
+              });
+            }
+  
+            const group = groupedData.get(jobData.id)!;
+            group.applicants.push({
+              ...application,
+              applicantName,
+              qualification_type: qualificationType
+            });
+          } catch (error) {
+            console.error('데이터 조회 실패:', error);
+          }
+        }));
+  
+        setGroupedApplications(Array.from(groupedData.values()));
       }
     } catch (error) {
       console.error('지원자 목록 조회 실패:', error);
@@ -70,8 +102,8 @@ const NotificationsScreen = () => {
       console.error('지원자 상세정보 조회 실패:', error);
     }
   };
-  
-  const updateApplicationStatus = async (applicationId: number, status: '합격' | '불합격') => {
+
+  const updateApplicationStatus = async (applicationId: number, status: '합격' | '불합격' | '면접 요망') => {
     if (!applicationId) {
       console.error('applicationId가 없습니다');
       Alert.alert('오류', '지원 정보를 찾을 수 없습니다.');
@@ -84,7 +116,7 @@ const NotificationsScreen = () => {
       });
 
       if (response.data.success) {
-        await fetchApplications(); // 목록 새로고침
+        await fetchApplications();
         Alert.alert('성공', `지원자를 ${status}처리하였습니다.`);
         setShowModal(false);
       }
@@ -94,34 +126,47 @@ const NotificationsScreen = () => {
     }
   };
 
-  const renderApplication = ({ item }: { item: JobPostStatus }) => (
-    <TouchableOpacity 
+  const renderApplicant = (applicant: JobPostStatus & { applicantName?: string }) => (
+    <TouchableOpacity
       style={styles.applicationItem}
-      onPress={() => fetchApplicantDetail(item.jobSeeker_id, item.job_id)}
+      onPress={() => fetchApplicantDetail(applicant.jobSeeker_id, applicant.job_id)}
     >
-      <View style={styles.statusIndicator}>
-        <Ionicons 
+      <View style={styles.applicantInfo}>
+        <Ionicons
           name={
-            item.application_status === '합격' ? 'checkmark-circle' :
-            item.application_status === '불합격' ? 'close-circle' : 
+            applicant.application_status === '합격' ? 'checkmark-circle' :
+            applicant.application_status === '불합격' ? 'close-circle' :
+            applicant.application_status === '면접 요망' ? 'calendar' :
             'time'
-          } 
-          size={24} 
+          }
+          size={20}
           color={
-            item.application_status === '합격' ? '#4CAF50' :
-            item.application_status === '불합격' ? '#F44336' :
+            applicant.application_status === '합격' ? '#4CAF50' :
+            applicant.application_status === '불합격' ? '#F44336' :
+            applicant.application_status === '면접 요망' ? '#87CEEB' :
             '#FFC107'
-          } 
+          }
         />
+        <View style={styles.textContainer}>
+          <Text style={styles.applicantName}>{applicant.applicantName}</Text>
+          <View style={styles.detailsContainer}>
+            <Text style={styles.dateText}>
+              지원일: {new Date(applicant.applied_at).toLocaleDateString('ko-KR', {
+                year: 'numeric',
+                month: '2-digit',
+                day: '2-digit',
+                formatMatcher: 'best fit'
+              }).replace(/\. /g, '-').replace('.', '')}
+            </Text>
+            <View style={styles.qualificationBadge}>
+              <Text style={styles.qualificationText}>
+                {applicant.qualification_type || '지원자격 정보 없음'}
+              </Text>
+            </View>
+          </View>
+        </View>
+        <Ionicons name="chevron-forward" size={20} color="#666" />
       </View>
-      <View style={styles.applicationInfo}>
-        <Text style={styles.statusText}>{item.application_status}</Text>
-        <Text style={styles.dateText}>지원일: {new Date(item.applied_at).toLocaleDateString()}</Text>
-        <Text style={styles.qualificationText}>
-          {item.qualification_type || '지원자격 정보 없음'}
-        </Text>
-      </View>
-      <Ionicons name="chevron-forward" size={24} color="#666" />
     </TouchableOpacity>
   );
 
@@ -144,7 +189,7 @@ const NotificationsScreen = () => {
         <ScrollView style={styles.modalContent}>
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>공고 정보</Text>
-            <Text style={styles.jobTitle}>{selectedApplicant.jobPost?.title || '정보 없음'}</Text>
+            <Text style={styles.modalJobTitle}>{selectedApplicant.jobPost?.title || '정보 없음'}</Text>
             <Text style={styles.companyName}>{selectedApplicant.jobPost?.company_name || '정보 없음'}</Text>
           </View>
 
@@ -196,6 +241,12 @@ const NotificationsScreen = () => {
               <Text style={styles.buttonText}>불합격</Text>
             </TouchableOpacity>
             <TouchableOpacity 
+              style={[styles.actionButton, styles.interviewButton]}
+              onPress={() => updateApplicationStatus(selectedApplicant.id, '면접 요망')}
+            >
+              <Text style={styles.buttonText}>면접 요망</Text>
+            </TouchableOpacity>
+            <TouchableOpacity 
               style={[styles.actionButton, styles.acceptButton]}
               onPress={() => updateApplicationStatus(selectedApplicant.id, '합격')}
             >
@@ -209,27 +260,30 @@ const NotificationsScreen = () => {
 );
 
 
-
   return (
     <SafeAreaView style={styles.container}>
-      <FlatList
-  ListHeaderComponent={
-    <View style={styles.headerContainer}>
-      <Text style={styles.headerTitle}>지원자</Text>
-    </View>
-  }
-  data={applications}
-  renderItem={renderApplication}
-  keyExtractor={item => item.id.toString()}
-  refreshControl={
-    <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
-  }
-  ListEmptyComponent={
-    <View style={styles.emptyContainer}>
-      <Text style={styles.emptyText}>아직 지원자가 없습니다.</Text>
-    </View>
-  }
-/>
+      <ScrollView
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+        }
+      >
+        <Text style={styles.title}>지원자</Text>
+        {groupedApplications.map((group) => (
+          <View key={group.jobId} style={styles.jobGroup}>
+            <Text style={styles.jobGroupTitle}>{group.jobTitle}</Text>
+            {group.applicants.map((applicant) => (
+              <View key={applicant.id} style={styles.applicantContainer}>
+                {renderApplicant(applicant)}
+              </View>
+            ))}
+          </View>
+        ))}
+        {groupedApplications.length === 0 && (
+          <View style={styles.emptyContainer}>
+            <Text style={styles.emptyText}>아직 지원자가 없습니다</Text>
+          </View>
+        )}
+      </ScrollView>
       <ApplicantModal />
     </SafeAreaView>
   );
@@ -240,14 +294,17 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#f5f5f5',
   },
-  applicationItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    padding: 16,
+  title: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    margin: 16,
+  },
+  jobGroup: {
+    marginBottom: 20,
     backgroundColor: 'white',
+    padding: 16,
+    borderRadius: 12,
     marginHorizontal: 16,
-    marginVertical: 8,
-    borderRadius: 12,  
     shadowColor: '#000',
     shadowOffset: {
       width: 0,
@@ -257,25 +314,90 @@ const styles = StyleSheet.create({
     shadowRadius: 4,
     elevation: 3,
   },
-  statusIndicator: {
-    position: 'absolute',
-    left: 16,
-    top: '50%',
-    transform: [{ translateY: -12 }],
-  },
-  applicationInfo: {
-    flex: 1,
-    marginLeft: 48,  // statusIndicator 아이콘을 위한 공간
-  },
-  statusText: {
+  jobGroupTitle: {
     fontSize: 18,
     fontWeight: 'bold',
-    marginBottom: 4,
+    marginBottom: 12,
     color: '#333',
+  },
+  applicantContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingLeft: 8,
+  },
+  applicationItem: {
+    flex: 1,
+    flexDirection: 'row',
+    backgroundColor: 'white',
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    borderRadius: 12,
+  },
+  applicantInfo: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  textContainer: {
+    flex: 1,
+    marginLeft: 12,
+  },
+  applicantName: {
+    fontSize: 16,
+    fontWeight: '500',
+    color: '#333',
+    marginBottom: 4,
+  },
+  detailsContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
   },
   dateText: {
     fontSize: 14,
     color: '#666',
+  },
+  statusText: {
+    fontSize: 14,
+    fontWeight: '500',
+  },
+  qualificationTag: {
+    backgroundColor: '#E3F2FD', 
+    color: '#1976D2',          
+    fontSize: 12,               
+    marginLeft: 8,              
+    paddingVertical: 2,         
+    paddingHorizontal: 8,       
+    borderRadius: 4,            
+  },
+  nameStatusContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 4,
+  },
+  applicationStatus: { 
+    fontSize: 14,
+    color: '#666',
+  },
+  tagText: { 
+    fontSize: 14,
+    color: '#666',
+    backgroundColor: '#f0f0f0',
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 4,
+  },
+  emptyContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
+    marginTop: 100,
+  },
+  emptyText: {
+    fontSize: 16,
+    color: '#666',
+    textAlign: 'center',
   },
   modalContainer: {
     flex: 1,
@@ -322,7 +444,7 @@ const styles = StyleSheet.create({
     marginBottom: 12,
     color: '#333',
   },
-  jobTitle: {
+  modalJobTitle: {
     fontSize: 16,
     fontWeight: 'bold',
     marginBottom: 4,
@@ -370,11 +492,12 @@ const styles = StyleSheet.create({
     backgroundColor: 'white',
     borderTopWidth: 1,
     borderTopColor: '#eee',
+    marginBottom: 20,
   },
   actionButton: {
     flex: 1,
     padding: 16,
-    margin: 8,
+    margin: 4,
     borderRadius: 8,
     alignItems: 'center',
     shadowColor: '#000',
@@ -389,39 +512,18 @@ const styles = StyleSheet.create({
   rejectButton: {
     backgroundColor: '#F44336',
   },
+  interviewButton: {
+    backgroundColor: '#87CEEB',
+  },
   acceptButton: {
     backgroundColor: '#4CAF50',
   },
   buttonText: {
     color: 'white',
-    fontSize: 16,
+    fontSize: 14,
     fontWeight: 'bold',
-  },
-  emptyContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: 20,
-    marginTop: 100,
-  },
-  emptyText: {
-    fontSize: 16,
-    color: '#666',
-    textAlign: 'center',
-  },
-  headerContainer: {
-    padding: 20,         
-    backgroundColor: 'white',  
-    borderBottomWidth: 1,      
-    borderBottomColor: '#eee', 
-  },
-  headerTitle: {               
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: '#333',
   },
   qualificationBadge: {
-    backgroundColor: '#E3F2FD',  
     paddingHorizontal: 8,
     paddingVertical: 2,        
     borderRadius: 4,
@@ -431,7 +533,6 @@ const styles = StyleSheet.create({
   qualificationText: {
     fontSize: 14,
     color: '#666',
-    marginTop: 4,
   },
 });
 
