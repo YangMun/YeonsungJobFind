@@ -1043,5 +1043,149 @@ app.post('/api/job-status-insert', async (req, res) => {
     res.status(500).json({ success: false });
   }
 });
+
+
+// 고용주별 지원자 목록 조회 API
+app.get('/api/employer/applications/:employerId', async (req, res) => {
+  const { employerId } = req.params;
+  
+  try {
+    const query = `
+      SELECT js.*, pj.title
+      FROM JobPost_Status js
+      JOIN PostJob pj ON js.job_id = pj.id
+      WHERE pj.employer_id = ?
+      ORDER BY js.applied_at DESC
+    `;
+    
+    const [applications] = await pool.query(query, [employerId]);
+    res.json({ success: true, applications });
+  } catch (error) {
+    console.error('데이터베이스 오류:', error);
+    res.status(500).json({ success: false, message: '서버 오류가 발생했습니다.' });
+  }
+});
+
+// 지원자 상세 정보 조회 API
+app.get('/api/employer/applicant-detail/:jobSeekerId/:jobId', async (req, res) => {
+  const { jobSeekerId, jobId } = req.params;
+  
+  try {
+    // JobPost_Status에서 해당 지원 정보의 id와 상태 조회
+    const [applicationStatus] = await pool.query(
+      'SELECT * FROM JobPost_Status WHERE jobSeeker_id = ? AND job_id = ?',
+      [jobSeekerId, jobId]
+    );
+
+    // 공고 정보 조회
+    const [jobPost] = await pool.query(
+      'SELECT title, company_name FROM PostJob WHERE id = ?',
+      [jobId]
+    );
+
+    // 지원자 기본 정보 조회
+    const [normalInfo] = await pool.query(
+      'SELECT name, email, phone, birthDate FROM NormalInformation WHERE jobSeeker_id = ?',
+      [jobSeekerId]
+    );
+
+    // 학력 정보 조회
+    const [education] = await pool.query(
+      'SELECT university_type, school_name, major, graduation_status FROM GradeInformation WHERE jobSeeker_id = ?',
+      [jobSeekerId]
+    );
+
+    // 자기소개서 조회
+    const [careerStatement] = await pool.query(
+      'SELECT growth_process, personality, motivation, aspiration, career_history FROM career_statements WHERE jobSeeker_id = ?',
+      [jobSeekerId]
+    );
+
+    // 모든 정보를 하나의 객체로 조합
+    const detail = {
+      id: applicationStatus[0]?.id,
+      jobSeeker_id: applicationStatus[0]?.jobSeeker_id,
+      job_id: applicationStatus[0]?.job_id,
+      application_status: applicationStatus[0]?.application_status,
+      jobPost: jobPost[0] || { title: '정보 없음', company_name: '정보 없음' },
+      applicant: {
+        ...normalInfo[0] || { name: '정보 없음', email: '정보 없음', phone: '정보 없음', birthDate: '정보 없음' },
+        education: education[0] || {
+          university_type: '정보 없음',
+          school_name: '정보 없음',
+          major: '정보 없음',
+          graduation_status: '정보 없음'
+        },
+        careerStatement: careerStatement[0] || {
+          growth_process: '정보 없음',
+          personality: '정보 없음',
+          motivation: '정보 없음',
+          aspiration: '정보 없음',
+          career_history: '정보 없음'
+        }
+      }
+    };
+
+    res.json({ success: true, detail });
+  } catch (error) {
+    console.error('데이터베이스 오류:', error);
+    res.status(500).json({ success: false, message: '서버 오류가 발생했습니다.' });
+  }
+});
+
+
+// 지원 상태 업데이트 API
+app.put('/api/employer/update-status/:applicationId', async (req, res) => {
+  const { applicationId } = req.params;
+  const { status } = req.body;
+  
+  console.log('받은 데이터:', { applicationId, status });
+
+  try {
+    // 현재 상태 확인
+    const [current] = await pool.query(
+      'SELECT application_status FROM JobPost_Status WHERE id = ?',
+      [applicationId]
+    );
+    console.log('현재 상태:', current);
+
+    if (!current.length) {
+      return res.status(404).json({
+        success: false,
+        message: '해당 지원 정보를 찾을 수 없습니다.'
+      });
+    }
+
+    // 상태 업데이트
+    const updatedStatus = status === '합격' ? '합격' : '불합격';
+    
+    await pool.query(
+      'UPDATE JobPost_Status SET application_status = ? WHERE id = ?',
+      [updatedStatus, applicationId]
+    );
+
+    // 업데이트된 정보 조회
+    const [updated] = await pool.query(
+      'SELECT * FROM JobPost_Status WHERE id = ?',
+      [applicationId]
+    );
+
+    console.log('업데이트된 정보:', updated[0]);
+
+    res.json({
+      success: true,
+      message: '상태가 성공적으로 업데이트되었습니다.',
+      data: updated[0]
+    });
+  } catch (error) {
+    console.error('서버 에러:', error);
+    res.status(500).json({
+      success: false,
+      message: '상태 업데이트 실패',
+      error: error.message
+    });
+  }
+});
+
 const PORT = 3000;
 app.listen(PORT, () => console.log(`서버가 http://localhost:${PORT} 에서 실행 중입니다.`));

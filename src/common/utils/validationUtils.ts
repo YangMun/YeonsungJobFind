@@ -334,21 +334,8 @@ export const formatDate = (dateString: string): string => {
 };
 
 export const validateDate = (date: string): boolean => {
-  // YYYY.MM 형식 검사
   const dateRegex = /^\d{4}\.(0[1-9]|1[0-2])$/;
-  if (!dateRegex.test(date)) return false;
-
-  // 년도와 월이 유효한지 검사
-  const [year, month] = date.split('.');
-  const yearNum = parseInt(year);
-  const monthNum = parseInt(month);
-
-  const currentYear = new Date().getFullYear();
-  
-  return yearNum >= 1900 && 
-         yearNum <= currentYear + 10 && 
-         monthNum >= 1 && 
-         monthNum <= 12;
+  return dateRegex.test(date);
 };
 
 export const validateGradInfo = (data: GradInfoData): ValidationResult => {
@@ -599,3 +586,45 @@ export const maskEmail = (email: string): string => {
   const maskedUsername = username.slice(0, 3) + '*'.repeat(username.length - 3);
   return `${maskedUsername}@${domain}`;
 };
+
+//채용공고 상태 인터페이스 추가
+export interface JobPostStatus {
+  id: number;
+  job_id: number;
+  jobSeeker_id: string;
+  application_status: '합격' | '불합격' | '지원 완료/검토중';
+  applied_at: string;
+  updated_at: string;
+  qualification_type: string;
+}
+
+//채용공고 지원자 정보 인터페이스 추가
+export interface JobPostDetail {
+  id: number;
+  jobSeeker_id: string;    
+  job_id: number;         
+  application_status: '지원 완료/검토중' | '합격' | '불합격';
+  jobPost: {
+    title: string;
+    company_name: string;
+  };
+  applicant: {
+    name: string;
+    email: string;
+    phone: string;
+    birthDate: string;
+    education: {
+      university_type: string;
+      school_name: string;
+      major: string;
+      graduation_status: string;
+    };
+    careerStatement: {
+      growth_process: string;
+      personality: string;
+      motivation: string;
+      aspiration: string;
+      career_history: string;
+    };
+  };
+}
