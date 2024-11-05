@@ -598,6 +598,12 @@ export interface JobPostStatus {
   qualification_type: string;
 }
 
+// 기존 JobPostStatus 인터페이스를 확장
+export interface NotificationItem extends JobPostStatus {
+  title: string;          // PostJob 테이블의 title
+  company_name: string;   // PostJob 테이블의 company_name
+}
+
 //채용공고 지원자 정보 인터페이스 추가
 export interface JobPostDetail {
   id: number;
