@@ -334,8 +334,21 @@ export const formatDate = (dateString: string): string => {
 };
 
 export const validateDate = (date: string): boolean => {
+  // YYYY.MM 형식 검사
   const dateRegex = /^\d{4}\.(0[1-9]|1[0-2])$/;
-  return dateRegex.test(date);
+  if (!dateRegex.test(date)) return false;
+
+  // 년도와 월이 유효한지 검사
+  const [year, month] = date.split('.');
+  const yearNum = parseInt(year);
+  const monthNum = parseInt(month);
+
+  const currentYear = new Date().getFullYear();
+
+  return yearNum >= 1900 && 
+         yearNum <= currentYear + 10 && 
+         monthNum >= 1 && 
+         monthNum <= 12;
 };
 
 export const validateGradInfo = (data: GradInfoData): ValidationResult => {
