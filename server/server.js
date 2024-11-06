@@ -1178,6 +1178,7 @@ app.get('/api/jobseeker/applications/:jobSeekerId', async (req, res) => {
         js.*,
         pj.title,
         pj.company_name,
+        pj.location,
         pj.qualification_type
       FROM JobPost_Status js
       JOIN PostJob pj ON js.job_id = pj.id
