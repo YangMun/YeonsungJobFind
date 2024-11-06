@@ -334,8 +334,21 @@ export const formatDate = (dateString: string): string => {
 };
 
 export const validateDate = (date: string): boolean => {
+  // YYYY.MM 형식 검사
   const dateRegex = /^\d{4}\.(0[1-9]|1[0-2])$/;
-  return dateRegex.test(date);
+  if (!dateRegex.test(date)) return false;
+
+  // 년도와 월이 유효한지 검사
+  const [year, month] = date.split('.');
+  const yearNum = parseInt(year);
+  const monthNum = parseInt(month);
+
+  const currentYear = new Date().getFullYear();
+
+  return yearNum >= 1900 && 
+         yearNum <= currentYear + 10 && 
+         monthNum >= 1 && 
+         monthNum <= 12;
 };
 
 export const validateGradInfo = (data: GradInfoData): ValidationResult => {
@@ -592,11 +605,22 @@ export interface JobPostStatus {
   id: number;
   job_id: number;
   jobSeeker_id: string;
-  application_status: '합격' | '불합격' | '지원 완료/검토중';
+  application_status: string;
   applied_at: string;
   updated_at: string;
   qualification_type: string;
 }
+
+//채용공고 그룹화된 데이터 타입 정의
+export interface GroupedJobPost {
+  jobTitle: string;
+  jobId: number;
+  applicants: (JobPostStatus & {
+    applicantName?: string;
+    qualification_type?: string;
+  })[];
+}
+
 
 // 기존 JobPostStatus 인터페이스를 확장
 export interface NotificationItem extends JobPostStatus {

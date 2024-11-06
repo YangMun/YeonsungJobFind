@@ -1139,43 +1139,24 @@ app.put('/api/employer/update-status/:applicationId', async (req, res) => {
   const { applicationId } = req.params;
   const { status } = req.body;
   
-  console.log('받은 데이터:', { applicationId, status });
-
   try {
-    // 현재 상태 확인
-    const [current] = await pool.query(
-      'SELECT application_status FROM JobPost_Status WHERE id = ?',
-      [applicationId]
-    );
-    console.log('현재 상태:', current);
-
-    if (!current.length) {
-      return res.status(404).json({
-        success: false,
-        message: '해당 지원 정보를 찾을 수 없습니다.'
+    // 상태 유효성 검사 추가
+    const validStatuses = ['합격', '불합격', '면접 요망'];
+    if (!validStatuses.includes(status)) {
+      return res.status(400).json({ 
+        success: false, 
+        message: '유효하지 않은 상태값입니다.' 
       });
     }
 
-    // 상태 업데이트
-    const updatedStatus = status === '합격' ? '합격' : '불합격';
-    
     await pool.query(
       'UPDATE JobPost_Status SET application_status = ? WHERE id = ?',
-      [updatedStatus, applicationId]
+      [status, applicationId]
     );
-
-    // 업데이트된 정보 조회
-    const [updated] = await pool.query(
-      'SELECT * FROM JobPost_Status WHERE id = ?',
-      [applicationId]
-    );
-
-    console.log('업데이트된 정보:', updated[0]);
 
     res.json({
       success: true,
-      message: '상태가 성공적으로 업데이트되었습니다.',
-      data: updated[0]
+      message: `지원자 상태가 "${status}"(으)로 업데이트되었습니다.`
     });
   } catch (error) {
     console.error('서버 에러:', error);
