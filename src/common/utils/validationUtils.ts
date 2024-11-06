@@ -640,6 +640,7 @@ export interface GroupedJobPost {
 export interface NotificationItem extends JobPostStatus {
   title: string;          // PostJob 테이블의 title
   company_name: string;   // PostJob 테이블의 company_name
+  location: string;
 }
 
 //채용공고 지원자 정보 인터페이스 추가
