@@ -371,7 +371,7 @@ export const validateGradInfo = (data: GradInfoData): ValidationResult => {
   // 재학기간 형식 검사
   const dateRegex = /^\d{4}\.(0[1-9]|1[0-2])$/;
   if (!dateRegex.test(data.admissionDate) || !dateRegex.test(data.graduationDate)) {
-    return { isValid: false, message: '재학기간은 YYYY.MM 형식��로 입력해주세요.' };
+    return { isValid: false, message: '재학기간은 YYYY.MM 형식으로 입력해주세요.' };
   }
 
   // 졸업여부 유효성 사
@@ -452,7 +452,7 @@ export const validateExperienceActivity = (data: ExperienceActivityData): Valida
     return { isValid: false, message: '날짜는 YYYY-MM 형식으로 입력해주세요.' };
   }
 
-  // 활동내용 길�� 검사
+  // 활동내용 길이 검사
   if (data.description.length > 500) {
     return { isValid: false, message: '활동내용은 500자를 초과할 수 없습니다.' };
   }
@@ -470,21 +470,7 @@ export const formatExperienceDate = (input: string): string => {
   
   // YYYY-MM 형식으로 변환
   const year = numericValue.slice(0, 4);
-  let month = numericValue.slice(4, 6);
-  
-  // 월 숫자로 변환
-  let monthNum = parseInt(month);
-  
-  // 월이 0이거나 12를 초과하는 경우 처리
-  if (monthNum === 0 || monthNum > 12) {
-    // 마지막 숫자를 사용하여 1~12 사이의 값으로 변환
-    monthNum = parseInt(month.slice(-1));
-    // 만약 마지막 숫자가 0이면 1로 설정
-    if (monthNum === 0) monthNum = 1;
-  }
-  
-  // 월을 2자리 문자열로 변환 (1 -> "01")
-  month = monthNum.toString().padStart(2, '0');
+  const month = numericValue.slice(4, 6).padEnd(2, '0');
   
   return `${year}-${month}`;
 };
@@ -563,7 +549,7 @@ export const validateCareerSections = (sections: CareerSectionData[]): Validatio
     };
   }
 
-  // 각 섹션의 글자 수 인
+  // 각 섹션의 글자 수 확인
   const invalidSection = sections.find(section => section.text.length > 500);
   if (invalidSection) {
     return { 
@@ -640,7 +626,6 @@ export interface GroupedJobPost {
 export interface NotificationItem extends JobPostStatus {
   title: string;          // PostJob 테이블의 title
   company_name: string;   // PostJob 테이블의 company_name
-  location: string;
 }
 
 //채용공고 지원자 정보 인터페이스 추가
@@ -648,7 +633,7 @@ export interface JobPostDetail {
   id: number;
   jobSeeker_id: string;    
   job_id: number;         
-  application_status: '지원 완료/검토중' | '합격' | '불합격' | '면접 요망';
+  application_status: '지원 완료/검토중' | '합격' | '불합격';
   jobPost: {
     title: string;
     company_name: string;
