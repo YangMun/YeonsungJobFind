@@ -109,24 +109,6 @@ const ExperienceActivityEducationForm = () => {
     setEndDate(formattedDate);
   };
 
-  const handleDelete = async () => {
-    if (!activityId) return;
-
-    try {
-      const response = await axios.delete(`${API_URL}/api/delete-experience-activity/${activityId}/${userId}`);
-      
-      if (response.data.success) {
-        Alert.alert('성공', '경험/활동/교육 정보가 삭제되었습니다.');
-        navigation.goBack();
-      } else {
-        Alert.alert('오류', response.data.message);
-      }
-    } catch (error) {
-      console.error('API 요청 오류:', error);
-      Alert.alert('오류', '서버 오류가 발생했습니다.');
-    }
-  };
-
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
@@ -236,34 +218,9 @@ const ExperienceActivityEducationForm = () => {
         </View>
       </ScrollView>
       <View style={styles.footer}>
-        {mode === 'edit' ? (
-          <TouchableOpacity 
-            style={[styles.cancelButton, { backgroundColor: '#FF4444' }]} 
-            onPress={() => {
-              Alert.alert(
-                '삭제 확인',
-                '정말 삭제하시겠습니까?',
-                [
-                  { text: '취소', style: 'cancel' },
-                  { 
-                    text: '삭제', 
-                    style: 'destructive',
-                    onPress: handleDelete 
-                  },
-                ]
-              );
-            }}
-          >
-            <Text style={[styles.cancelButtonText, { color: '#FFF' }]}>삭제</Text>
-          </TouchableOpacity>
-        ) : (
-          <TouchableOpacity 
-            style={styles.cancelButton} 
-            onPress={() => navigation.goBack()}
-          >
-            <Text style={styles.cancelButtonText}>취소</Text>
-          </TouchableOpacity>
-        )}
+        <TouchableOpacity style={styles.cancelButton} onPress={() => navigation.goBack()}>
+          <Text style={styles.cancelButtonText}>취소</Text>
+        </TouchableOpacity>
         <TouchableOpacity style={styles.submitButton} onPress={handleSubmit}>
           <Text style={styles.submitButtonText}>{mode === 'add' ? '추가' : '수정'}</Text>
         </TouchableOpacity>

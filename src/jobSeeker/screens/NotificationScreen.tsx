@@ -92,7 +92,6 @@ const NotificationScreen = () => {
                 <Text style={styles.status}>{item.title}</Text>
               </View>
               <Text style={styles.date}>지원일: {formatDate(item.applied_at)}</Text>
-              <Text style={styles.location}>근무지: {item.location}</Text>
               <View style={styles.companyContainer}>
                 <Text style={styles.company}>{item.company_name}</Text>
                 <Text style={styles.qualification}> · {item.qualification_type}</Text>
@@ -149,12 +148,11 @@ const styles = StyleSheet.create({
   },
   leftContent: {
     flex: 1,
-    gap: 8,
   },
   statusContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 1,
+    marginBottom: 8,
   },
   status: {
     fontSize: 18,
@@ -165,7 +163,7 @@ const styles = StyleSheet.create({
   date: {
     fontSize: 15,
     color: '#666',
-    marginBottom: 1,
+    marginBottom: 4,
     fontWeight: '500',
   },
   company: {
@@ -173,21 +171,14 @@ const styles = StyleSheet.create({
     color: '#333',
     fontWeight: '500',
   },
-  location: {
-    fontSize: 16,
-    color: '#333',
-    marginBottom: 1,
-  },
   companyContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginTop: 1,
   },
   qualification: {
     fontSize: 16,
     color: '#666',
     fontWeight: '500',
-    marginLeft: 1,
   },
   rightContent: {
     alignItems: 'center',

@@ -283,7 +283,7 @@ app.get('/api/employer-profile/:id', async (req, res) => {
     if (rows.length > 0) {
       res.json({ success: true, profile: rows[0] });
     } else {
-      res.status(404).json({ success: false, message: '해당 구인자를 찾을 수 없니다.' });
+      res.status(404).json({ success: false, message: '해당 구인자를 찾을 수 없��니다.' });
     }
   } catch (error) {
     console.error('데이터베이스 오류:', error);
@@ -403,7 +403,7 @@ app.get('/api/get-normal-info/:jobSeekerId', async (req, res) => {
   }
 });
 
-// 구직자 기 정보 저장/수정 API (이미지 업로드 포함)
+// 구직자 기��� 정보 저장/수정 API (이미지 업로드 포함)
 app.post('/api/save-normal-info', upload.single('image'), async (req, res) => {
   const { jobSeekerId, name, birthDate, email, phone, gender } = req.body;
   const image = req.file ? req.file.filename : null;
@@ -503,7 +503,7 @@ app.post('/api/save-grad-info', async (req, res) => {
   }
 });
 
-// 구직자 학력 정 조회 API
+// 구직자 학력 정�� 조회 API
 app.get('/api/get-education-info/:jobSeekerId', async (req, res) => {
   const { jobSeekerId } = req.params;
   
@@ -533,7 +533,7 @@ app.delete('/api/delete-grad-info/:jobSeekerId', async (req, res) => {
   }
 });
 
-// 경험/활동/교육 정보 저장 API
+// 경��/활동/교육 정보 저장 API
 app.post('/api/save-experience-activity', async (req, res) => {
   const { jobSeekerId, activityType, organization, startDate, endDate, description } = req.body;
   
@@ -543,7 +543,7 @@ app.post('/api/save-experience-activity', async (req, res) => {
   }
 
   // 활동구분 유효성 검사
-  const activityTypes = ['교내활동', '인턴', '자원봉사', '동아리', '아르바이트', '사회활동', '수행과제', '해외연수'];
+  const activityTypes = ['교내활동', '인', '자원봉사', '동아리', '아르바이트', '사회활동', '수행과제', '해외연수'];
   if (!activityTypes.includes(activityType)) {
     return res.status(400).json({ success: false, message: '올바른 활동구분을 선택해주세요.' });
   }
@@ -684,19 +684,19 @@ app.get('/api/get-experience-activities/:jobSeekerId', async (req, res) => {
 });
 
 // 경험/활동/교육 정보 삭제 API
-app.delete('/api/delete-experience-activity/:activityId/:jobSeekerId', async (req, res) => {
-  const { activityId, jobSeekerId } = req.params;
+app.delete('/api/delete-experience-activity/:id/:jobSeekerId', async (req, res) => {
+  const { id, jobSeekerId } = req.params;
   
   try {
     const [result] = await pool.query(
       'DELETE FROM ExperienceActivity WHERE id = ? AND jobSeeker_id = ?', 
-      [activityId, jobSeekerId]
+      [id, jobSeekerId]
     );
     
     if (result.affectedRows === 0) {
       return res.status(404).json({ 
         success: false, 
-        message: '해당 활동을 찾을 수 없거나 삭제 권한이 없습니다.' 
+        message: '해당 활동을 찾을 수 없습니다.' 
       });
     }
 
@@ -900,7 +900,7 @@ app.post('/api/save-career-statement', async (req, res) => {
 
     res.json({ 
       success: true, 
-      message: '자기소개서가 성공적으로 저장되었습니다.' 
+      message: '자기소��서가 성공적으로 저장되었습니다.' 
     });
   } catch (error) {
     console.error('데이터베이스 오류:', error);
@@ -1178,7 +1178,6 @@ app.get('/api/jobseeker/applications/:jobSeekerId', async (req, res) => {
         js.*,
         pj.title,
         pj.company_name,
-        pj.location,
         pj.qualification_type
       FROM JobPost_Status js
       JOIN PostJob pj ON js.job_id = pj.id
