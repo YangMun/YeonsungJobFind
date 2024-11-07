@@ -648,7 +648,7 @@ export interface JobPostDetail {
   id: number;
   jobSeeker_id: string;    
   job_id: number;         
-  application_status: '지원 완료/검토중' | '합격' | '불합격';
+  application_status: '지원 완료/검토중' | '합격' | '불합격' | '면접 요망';
   jobPost: {
     title: string;
     company_name: string;
