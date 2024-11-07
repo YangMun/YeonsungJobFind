@@ -144,7 +144,7 @@ const PostJobScreen: React.FC = () => {
         <Text style={styles.label}>근무 위치</Text>
         {renderInputWithCounter(location, setLocation, "근무 위치를 입력하세요", maxLengths.location)}
 
-        <Text style={styles.label}>지원 자격</Text>
+        <Text style={styles.label}>근무 형태</Text>
         <View style={styles.buttonContainer}>
           <TouchableOpacity
             style={[styles.button, qualificationType === '근로 장학생' && styles.selectedButton]}
