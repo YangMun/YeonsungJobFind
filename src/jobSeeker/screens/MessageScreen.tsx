@@ -8,6 +8,7 @@ const predefinedResponses = {
   '로드 맵': { type: 'image', source: require('../../assets/loadMap.png') },
   '이력서': '프로필 > 이력서 수정하기에서 이력서를 작성하실 수 있습니다.',
   '면접 서류 발급처': '학생복지센터 > One-stop Service Center 에서 받을 수 있습니다.',
+  '채용 절차': '1.모집 공고 지원\n2.면접 요망시 서류 지참하여 해당 부서 방문\n3.서류 One-stop에 제출 후 안내받기',
 };
 
 interface Message {
@@ -23,6 +24,7 @@ const menuOptions = [
   { id: '2', icon: '📍', title: '로드 맵' },
   { id: '3', icon: '📄', title: '이력서' },
   { id: '4', icon: 'ℹ️', title: '면접 서류 발급처' },
+  { id: '5', icon: '📌', title: '채용 절차' },
   // 추후에 추가
 ];
 
@@ -118,7 +120,7 @@ const MessageScreen = () => {
               <TouchableOpacity onPress={() => setShowMenu(false)}>
                 <Text style={styles.closeButton}>✕</Text>
               </TouchableOpacity>
-              <Text style={styles.menuTitle}>궁금한 내용을 입력해 주세요.</Text>
+              <Text style={styles.menuTitle}>궁금한 내용을 선택해 주세요.</Text>
             </View>
             <View style={styles.menuGrid}>
               {menuOptions.map((option) => (
