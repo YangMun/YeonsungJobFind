@@ -24,6 +24,13 @@ export interface ProfileData {
   email: string;
 }
 
+export interface Message {
+  id: string;
+  text?: string;
+  image?: any;
+  isUser: boolean;
+}
+
 interface PostJobData {
   title: string;
   contents: string;
