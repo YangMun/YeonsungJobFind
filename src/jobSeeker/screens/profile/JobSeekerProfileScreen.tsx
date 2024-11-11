@@ -81,9 +81,6 @@ const JobSeekerProfileScreen = () => {
     <View style={styles.container}>
       <SafeAreaView style={styles.safeArea}>
         <ScrollView contentContainerStyle={styles.scrollContainer}>
-          <View style={styles.header}>
-            <Text style={styles.headerTitle}>[보충역 지원] 지속적인 도전을 통해 한 층 ...</Text>
-          </View>
           <View style={styles.profileContainer}>
             <View style={styles.profileImageContainer}>
               {profileInfo?.image ? (
@@ -229,9 +226,6 @@ const JobSeekerProfileScreen = () => {
         </ScrollView>
       </SafeAreaView>
       <View style={styles.fixedButtonContainer}>
-        <TouchableOpacity style={styles.fixedButton}>
-          <Text style={styles.fixedButtonText}>희망근무조건 수정</Text>
-        </TouchableOpacity>
         <TouchableOpacity 
           style={[styles.fixedButton, styles.primaryButton]}
           onPress={handleEditProfile}
@@ -254,13 +248,6 @@ const styles = StyleSheet.create({
   scrollContainer: {
     padding: 16,
     paddingBottom: 100, // 하단 버튼을 가리지 않도록 여백 추가
-  },
-  header: {
-    marginBottom: 16,
-  },
-  headerTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
   },
   profileContainer: {
     flexDirection: 'row',
