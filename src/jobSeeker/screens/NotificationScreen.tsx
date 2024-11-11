@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useCallback } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, SafeAreaView, Platform, ScrollView, RefreshControl } from 'react-native';
+import { View, Text, StyleSheet, SafeAreaView, Platform, ScrollView, RefreshControl } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import axios from 'axios';
 import { API_URL, formatDate, NotificationItem} from '../../common/utils/validationUtils';

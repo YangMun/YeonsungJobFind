@@ -12,14 +12,9 @@ import axios from 'axios';
 import { useAuth } from '../../context/AuthContext';
 import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
-import { API_URL } from '../../common/utils/validationUtils';
+import { API_URL, ProfileData } from '../../common/utils/validationUtils';
 
-// ProfileData 인터페이스 정의
-interface ProfileData {
-  department_name: string;
-  phone_number: string;
-  email: string;
-}
+
 
 // RootStackParamList 타입을 정의합니다. 실제 네비게이션 구조에 맞게 조정해야 합니다.
 type RootStackParamList = {

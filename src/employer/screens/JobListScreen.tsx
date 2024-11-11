@@ -12,16 +12,7 @@ import { useAuth } from '../../context/AuthContext'; // AuthContext import 추�
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { RootStackParamList } from '../../navigation/AppNavigator';
-import { API_URL } from '../../common/utils/validationUtils';
-
-interface Job {
-  id: number;
-  title: string;
-  company_name: string;
-  contents: string;
-  recruitment_deadline: string;
-  location: string;
-}
+import { API_URL, Job } from '../../common/utils/validationUtils';
 
 type JobListScreenNavigationProp = StackNavigationProp<RootStackParamList, 'EmployerMain'>;
 
@@ -61,9 +52,21 @@ const JobListScreen: React.FC = () => {
     fetchJobs(); // 탭을 누를 때마다 데이터를 새로 불러옵니다.
   };
 
+  // 날짜 포맷팅 함수 추가
   const formatDate = (dateString: string) => {
+    if (!dateString) return '';
+
+    // 이미 YYYY-MM-DD 형식이면 그대로 반환
+    if (/^\d{4}-\d{2}-\d{2}$/.test(dateString)) {
+      return dateString;
+    }
+
+    // UTC 시간을 로컬 시간으로 변환
     const date = new Date(dateString);
-    return date.toISOString().split('T')[0];
+    const utc = date.getTime() + (date.getTimezoneOffset() * 60000);
+    const localDate = new Date(utc + (9 * 60 * 60 * 1000)); // KST (+9)
+
+    return localDate.toISOString().split('T')[0];
   };
 
   const truncateContent = (content: string, maxLength: number) => {

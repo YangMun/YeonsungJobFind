@@ -50,8 +50,18 @@ const EditJobScreen: React.FC<Props> = ({ route, navigation }) => {
   // 날짜 포맷팅 함수 추가
   const formatDate = (dateString: string) => {
     if (!dateString) return '';
+
+    // 이미 YYYY-MM-DD 형식이면 그대로 반환
+    if (/^\d{4}-\d{2}-\d{2}$/.test(dateString)) {
+      return dateString;
+    }
+
+    // UTC 시간을 로컬 시간으로 변환
     const date = new Date(dateString);
-    return date.toISOString().split('T')[0]; // YYYY-MM-DD 형식으로 반환
+    const utc = date.getTime() + (date.getTimezoneOffset() * 60000);
+    const localDate = new Date(utc + (9 * 60 * 60 * 1000)); // KST (+9)
+
+    return localDate.toISOString().split('T')[0];
   };
 
   useEffect(() => {
@@ -120,19 +130,22 @@ const EditJobScreen: React.FC<Props> = ({ route, navigation }) => {
       try {
         const response = await axios.put(`${API_URL}/api/update-job/${jobId}`, editJobData);
         if (response.data.success) {
-          Alert.alert('성공', '구인 공고가 성공적으로 수정되었습니다.');
-          navigation.goBack();
-        } else {
-          Alert.alert('오류', response.data.message);
-        }
-      } catch (error) {
-        console.error('API 요청 오류:', error);
-        Alert.alert('오류', '서버 오류가 발생했습니다. 나중에 다시 시도해주세요.');
+          Alert.alert('성공', '구인 공고가 성공적으로 수정되었습니다.', [
+          {
+            text: '확인',
+            onPress: () => {
+              // navigation.goBack() 대신 replace 사용
+              navigation.replace('EmployerJobDetail', { jobId });
+            }
+          }
+        ]);
+      } else {
+        Alert.alert('오류', response.data.message);
       }
-    } else {
-      Alert.alert('입력 오류', validationResult.message);
+    } catch (error) {
     }
-  };
+  }
+};
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -168,6 +181,12 @@ const EditJobScreen: React.FC<Props> = ({ route, navigation }) => {
             onPress={() => setQualificationType('교비')}
           >
             <Text style={styles.buttonText}>교비</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={[styles.button, qualificationType === '조교' && styles.selectedButton]}
+            onPress={() => setQualificationType('조교')}
+          >
+            <Text style={styles.buttonText}>조교</Text>
           </TouchableOpacity>
         </View>
 
