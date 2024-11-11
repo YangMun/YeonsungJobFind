@@ -169,6 +169,12 @@ const EditJobScreen: React.FC<Props> = ({ route, navigation }) => {
           >
             <Text style={styles.buttonText}>교비</Text>
           </TouchableOpacity>
+          <TouchableOpacity
+            style={[styles.button, qualificationType === '조교' && styles.selectedButton]}
+            onPress={() => setQualificationType('조교')}
+          >
+            <Text style={styles.buttonText}>조교</Text>
+          </TouchableOpacity>
         </View>
 
         <Text style={styles.label}>근무 기간</Text>
