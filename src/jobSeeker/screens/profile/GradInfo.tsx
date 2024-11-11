@@ -1,8 +1,8 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { View, Text, StyleSheet, SafeAreaView, TouchableOpacity, TextInput, ScrollView, Modal, Dimensions, Alert, Platform } from 'react-native';
+import { View, Text, StyleSheet, SafeAreaView, TouchableOpacity, TextInput, ScrollView, Modal, Dimensions, Alert } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation, useRoute } from '@react-navigation/native';
-import { formatDate, validateDate, validateGradInfo, GradInfoData, API_URL } from '../../../common/utils/validationUtils';
+import {validateDate, validateGradInfo, GradInfoData, API_URL } from '../../../common/utils/validationUtils';
 import axios from 'axios';
 import { useAuth } from '../../../context/AuthContext';
 
