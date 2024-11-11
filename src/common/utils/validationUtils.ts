@@ -17,6 +17,13 @@ interface SignUpResult {
   message: string;
 }
 
+// ProfileData 인터페이스 정의
+export interface ProfileData {
+  department_name: string;
+  phone_number: string;
+  email: string;
+}
+
 interface PostJobData {
   title: string;
   contents: string;

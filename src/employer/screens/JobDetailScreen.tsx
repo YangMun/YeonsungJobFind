@@ -6,7 +6,7 @@ import axios from 'axios';
 import { Ionicons } from '@expo/vector-icons';
 import { Alert } from 'react-native';
 import { RootStackParamList } from '../../navigation/AppNavigator';
-import { API_URL } from '../../common/utils/validationUtils';
+import { API_URL, JobDetail } from '../../common/utils/validationUtils';
 
 
 type JobDetailScreenRouteProp = RouteProp<RootStackParamList, 'EmployerJobDetail'>;
@@ -16,21 +16,6 @@ type Props = {
   route: JobDetailScreenRouteProp;
   navigation: JobDetailScreenNavigationProp;
 };
-
-interface JobDetail {
-  id: number;
-  title: string;
-  contents: string;
-  company_name: string;
-  location: string;
-  qualification_type: string;
-  work_period_start: string;
-  work_period_end: string;
-  recruitment_deadline: string;
-  hourly_wage: number;
-  application_method: string;
-  contact_number: string;
-}
 
 const JobDetailScreen: React.FC<Props> = ({ route, navigation }) => {
   const { jobId } = route.params;

@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, SafeAreaView, Platform, Modal, FlatList, Image } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
+import {Message} from '../../common/utils/validationUtils';
 
 // 미리 정의된 응답들
 const predefinedResponses = {
@@ -10,13 +11,6 @@ const predefinedResponses = {
   '면접 서류 발급처': '학생복지센터 > One-stop Service Center 에서 받을 수 있습니다.',
   '채용 절차': '1.모집 공고 지원\n2.면접 요망시 서류 지참하여 해당 부서 방문\n3.서류 One-stop에 제출 후 안내받기',
 };
-
-interface Message {
-  id: string;
-  text?: string;
-  image?: any;
-  isUser: boolean;
-}
 
 // 선택 메뉴 옵션 추가
 const menuOptions = [

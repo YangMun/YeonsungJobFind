@@ -12,16 +12,7 @@ import { useAuth } from '../../context/AuthContext'; // AuthContext import ì¶”ê°
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { RootStackParamList } from '../../navigation/AppNavigator';
-import { API_URL } from '../../common/utils/validationUtils';
-
-interface Job {
-  id: number;
-  title: string;
-  company_name: string;
-  contents: string;
-  recruitment_deadline: string;
-  location: string;
-}
+import { API_URL, Job } from '../../common/utils/validationUtils';
 
 type JobListScreenNavigationProp = StackNavigationProp<RootStackParamList, 'EmployerMain'>;
 
