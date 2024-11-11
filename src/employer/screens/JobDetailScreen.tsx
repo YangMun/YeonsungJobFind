@@ -7,7 +7,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { Alert } from 'react-native';
 import { RootStackParamList } from '../../navigation/AppNavigator';
 import { API_URL } from '../../common/utils/validationUtils';
-import { Image, Linking } from 'react-native';
+
 
 type JobDetailScreenRouteProp = RouteProp<RootStackParamList, 'EmployerJobDetail'>;
 type JobDetailScreenNavigationProp = StackNavigationProp<RootStackParamList, 'EmployerJobDetail'>;
@@ -30,17 +30,7 @@ interface JobDetail {
   hourly_wage: number;
   application_method: string;
   contact_number: string;
-  file_url?: string;  
-  file_type?: string; 
 }
-
-const isImageFile = (type: string | undefined) => {
-  return type?.startsWith('image/');
-};
-
-const isPDFFile = (type: string | undefined) => {
-  return type === 'application/pdf';
-};
 
 const JobDetailScreen: React.FC<Props> = ({ route, navigation }) => {
   const { jobId } = route.params;
@@ -52,9 +42,6 @@ const JobDetailScreen: React.FC<Props> = ({ route, navigation }) => {
       try {
         const response = await axios.get(`${API_URL}/api/job-detail/${jobId}`);
         if (response.data.success) {
-          console.log('Job Detail Response:', response.data.job); // 전체 데이터 확인
-          console.log('File URL:', response.data.job.file_url); // 파일 URL 확인
-          console.log('File Type:', response.data.job.file_type); // 파일 타입 확인
           setJobDetail(response.data.job);
         }
       } catch (error) {
@@ -160,42 +147,20 @@ const JobDetailScreen: React.FC<Props> = ({ route, navigation }) => {
                 {isContentExpanded ? '접기' : '더 보기'}
               </Text>
             </TouchableOpacity>
-            {/* 첨부 파일 표시 부분 */}
-          {jobDetail.file_url && (
-            <View style={styles.fileContainer}>
-              {isImageFile(jobDetail.file_type) ? (
-                <Image
-                  source={{ uri: jobDetail.file_url }}
-                  style={styles.fileImage}
-                  resizeMode="contain"
-                />
-              ) : isPDFFile(jobDetail.file_type) && (
-                <TouchableOpacity 
-                  style={styles.fileButton}
-                  onPress={() => Linking.openURL(jobDetail.file_url!)}
-                >
-                  <View style={styles.fileButtonContent}>
-                    <Ionicons name="document-text" size={24} color="#4a90e2" />
-                    <Text style={styles.fileButtonText}>첨부파일 보기</Text>
-                  </View>
-                </TouchableOpacity>
-              )}
-            </View>
-          )}
-        </View>
+          </View>
 
-        <View style={styles.buttonContainer}>
-          <TouchableOpacity style={[styles.button, styles.editButton]} onPress={handleEdit}>
-            <Text style={styles.buttonText}>수정하기</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={[styles.button, styles.deleteButton]} onPress={handleDelete}>
-            <Text style={styles.buttonText}>삭제하기</Text>
-          </TouchableOpacity>
+          <View style={styles.buttonContainer}>
+            <TouchableOpacity style={[styles.button, styles.editButton]} onPress={handleEdit}>
+              <Text style={styles.buttonText}>수정하기</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={[styles.button, styles.deleteButton]} onPress={handleDelete}>
+              <Text style={styles.buttonText}>삭제하기</Text>
+            </TouchableOpacity>
+          </View>
         </View>
-      </View>
-    </ScrollView>
-  </SafeAreaView>
-);
+      </ScrollView>
+    </SafeAreaView>
+  );
 };
 
 const SectionTitle: React.FC<{ title: string }> = ({ title }) => (
@@ -369,37 +334,6 @@ const styles = StyleSheet.create({
     color: '#ffffff',
     fontSize: 16,
     fontWeight: 'bold',
-  },
-  fileContainer: {
-    marginTop: 16,
-    borderTopWidth: 1,
-    borderTopColor: '#e0e0e0',
-    paddingTop: 16,
-  },
-  fileImage: {
-    width: '100%',
-    height: 200,
-    borderRadius: 8,
-  },
-  fileButton: {
-    backgroundColor: '#f8f9fa',
-    borderRadius: 8,
-    padding: 12,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderWidth: 1,
-    borderColor: '#e0e0e0',
-  },
-  fileButtonContent: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  fileButtonText: {
-    marginLeft: 8,
-    fontSize: 16,
-    color: '#4a90e2',
-    fontWeight: '500',
   },
 });
 
