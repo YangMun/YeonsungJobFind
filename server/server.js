@@ -1194,5 +1194,35 @@ app.get('/api/jobseeker/applications/:jobSeekerId', async (req, res) => {
   }
 });
 
+
+// 사용자 데이터 조회 API
+app.get('/api/users', async (req, res) => {
+  const { userType } = req.query;
+
+  try {
+    let table;
+
+    // userType에 따라 테이블을 선택
+    if (userType === 'jobSeeker') {
+      table = 'jobSeeker';
+    } else if (userType === 'employer') {
+      table = 'employer';
+    } else {
+      return res.status(400).json({ success: false, message: '유효하지 않은 사용자 유형입니다.' });
+    }
+
+    // 사용자 데이터 조회 쿼리
+    const [rows] = await pool.query(`SELECT * FROM ${table}`);
+
+    // 데이터 반환
+    res.json({ success: true, userType, users: rows });
+  } catch (error) {
+    console.error('데이터베이스 오류:', error);
+    res.status(500).json({ success: false, message: '서버 오류가 발생했습니다.' });
+  }
+});
+
+
+
 const PORT = 3000;
 app.listen(PORT, () => console.log(`서버가 http://localhost:${PORT} 에서 실행 중입니다.`));

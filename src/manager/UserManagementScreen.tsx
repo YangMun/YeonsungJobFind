@@ -1,28 +1,16 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, ActivityIndicator, FlatList } from 'react-native';
 import axios from 'axios';
-import { RouteProp } from '@react-navigation/native';
-import { StackNavigationProp } from '@react-navigation/stack';
-import { RootStackParamList } from '../navigation/AppNavigator';
 import { API_URL } from '../common/utils/validationUtils';
-import { useAuth } from '../context/AuthContext';
 
 type User = {
   id: number;
   name: string;
   email: string;
+  userType: string;  // userType을 포함
 };
 
-type DetailScreenRouteProp = RouteProp<RootStackParamList, 'JobSeekerDetail'>;
-type DetailScreenNavigationProp = StackNavigationProp<RootStackParamList, 'JobSeekerDetail'>;
-
-type Props = {
-  route: DetailScreenRouteProp;
-  navigation: DetailScreenNavigationProp;
-};
-
-const UserManagementScreen: React.FC<Props> = ({ route }) => {
-  const { jobId } = route.params;  // jobSeekerId를 route에서 받아옵니다.
+const UserManagementScreen: React.FC = () => {
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
 
@@ -30,9 +18,9 @@ const UserManagementScreen: React.FC<Props> = ({ route }) => {
   const fetchUserData = async () => {
     try {
       setLoading(true);
-      const response = await axios.get(`${API_URL}/api/save-grad-info`, {
+      const response = await axios.get(`${API_URL}/api/users`, {
         params: {
-          jobSeekerId: jobId,  // jobSeekerId를 API 호출 시 전달합니다.
+          userType: 'jobSeeker',  // 'jobSeeker' 또는 'employer'로 지정해서 전체 유저 타입을 가져옵니다.
         },
       });
 
@@ -55,13 +43,15 @@ const UserManagementScreen: React.FC<Props> = ({ route }) => {
   // 초기 로딩 시 API 호출
   useEffect(() => {
     fetchUserData();
-  }, []);
+  }, []);  // userType을 변경하고 싶은 경우, useEffect의 dependency 배열에 넣어야 함.
 
   // 사용자 목록 렌더링
   const renderUserItem = ({ item }: { item: User }) => (
     <View style={styles.userItem}>
       <Text style={styles.userName}>{item.name}</Text>
       <Text style={styles.userEmail}>{item.email}</Text>
+      {/* userType도 <Text>로 감싸서 표시 */}
+      <Text style={styles.userType}>{item.userType}</Text>
     </View>
   );
 
@@ -112,6 +102,10 @@ const styles = StyleSheet.create({
   userEmail: {
     fontSize: 16,
     color: '#495057',
+  },
+  userType: {
+    fontSize: 14,
+    color: '#6c757d',
   },
   loadingContainer: {
     flex: 1,
