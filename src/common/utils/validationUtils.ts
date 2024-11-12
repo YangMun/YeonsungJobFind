@@ -29,6 +29,8 @@ export interface Message {
   text?: string;
   image?: any;
   isUser: boolean;
+  buildingOptions?: boolean;
+  departments?: string[];
 }
 
 interface PostJobData {
@@ -385,7 +387,7 @@ export const validateGradInfo = (data: GradInfoData): ValidationResult => {
   // 재학기간 형식 검사
   const dateRegex = /^\d{4}\.(0[1-9]|1[0-2])$/;
   if (!dateRegex.test(data.admissionDate) || !dateRegex.test(data.graduationDate)) {
-    return { isValid: false, message: '재학기간은 YYYY.MM 형식��로 입력해주세요.' };
+    return { isValid: false, message: '재학기간은 YYYY.MM 형식로 입력해주세요.' };
   }
 
   // 졸업여부 유효성 사
@@ -466,7 +468,7 @@ export const validateExperienceActivity = (data: ExperienceActivityData): Valida
     return { isValid: false, message: '날짜는 YYYY-MM 형식으로 입력해주세요.' };
   }
 
-  // 활동내용 길�� 검사
+  // 활동내용 길 검사
   if (data.description.length > 500) {
     return { isValid: false, message: '활동내용은 500자를 초과할 수 없습니다.' };
   }
@@ -491,7 +493,7 @@ export const formatExperienceDate = (input: string): string => {
   
   // 월이 0이거나 12를 초과하는 경우 처리
   if (monthNum === 0 || monthNum > 12) {
-    // 마지막 숫자를 사용하여 1~12 사이의 값으로 변환
+    // 마지��� 숫자를 사용하여 1~12 사이의 값으로 변환
     monthNum = parseInt(month.slice(-1));
     // 만약 마지막 숫자가 0이면 1로 설정
     if (monthNum === 0) monthNum = 1;
