@@ -4,7 +4,7 @@ import { View, Text, StyleSheet } from 'react-native';
 const PostManagementScreen = () => {
   return (
     <View style={styles.container}>
-      <Text>회원 관리화면</Text>
+      <Text>게시글 관리화면</Text>
     </View>
   );
 };
