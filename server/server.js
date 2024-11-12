@@ -1194,5 +1194,19 @@ app.get('/api/jobseeker/applications/:jobSeekerId', async (req, res) => {
   }
 });
 
+// 구인 공고 전체 조회 API
+app.get('/api/postManagement/getAllPostJob', async (req, res) => {
+  
+  try {
+    const query = 'SELECT title, company_name FROM PostJob';
+    
+    const [applications] = await pool.query(query);
+    res.json({ success: true, applications });
+  } catch (error) {
+    console.error('데이터베이스 오류:', error);
+    res.status(500).json({ success: false, message: '서버 오류가 발생했습니다.' });
+  }
+});
+
 const PORT = 3000;
 app.listen(PORT, () => console.log(`서버가 http://localhost:${PORT} 에서 실행 중입니다.`));
