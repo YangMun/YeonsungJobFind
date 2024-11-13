@@ -16,7 +16,7 @@ const predefinedResponses = {
 const menuOptions = [
   { id: '1', icon: '➕', title: '지원 방법' },
   { id: '2', icon: '🗺️', title: '로드 맵' },
-  { id: '3', icon: '📄', title: '이력' },
+  { id: '3', icon: '📄', title: '이력서' },
   { id: '4', icon: 'ℹ️', title: '면접 서류 발급처' },
   { id: '5', icon: '📌', title: '채용 절차' },
   // 추후에 추가
