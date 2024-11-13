@@ -20,7 +20,7 @@ const UserManagementScreen: React.FC = () => {
       setLoading(true);
       const response = await axios.get(`${API_URL}/api/users`, {
         params: {
-          userType: 'jobSeeker',  // 'jobSeeker' 또는 'employer'로 지정해서 전체 유저 타입을 가져옵니다.
+          userType: 'user',
         },
       });
 
