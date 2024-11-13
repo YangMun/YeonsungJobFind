@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, ScrollView, SafeAreaView, TouchableOpacity, Image } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, SafeAreaView, TouchableOpacity, Image, Alert } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
@@ -77,6 +77,23 @@ const JobSeekerProfileScreen = () => {
     navigation.navigate('ProfileEditView');
   };
 
+  const handleLogout = () => {
+    Alert.alert(
+      '로그아웃',
+      '정말 로그아웃 하시겠습니까?',
+      [
+        {
+          text: '취소',
+          style: 'cancel'
+        },
+        {
+          text: '로그아웃',
+          onPress: () => navigation.navigate('Login')
+        }
+      ]
+    );
+  };
+
   return (
     <View style={styles.container}>
       <SafeAreaView style={styles.safeArea}>
@@ -100,6 +117,12 @@ const JobSeekerProfileScreen = () => {
                   : '정보 없음'}
               </Text>
             </View>
+            <TouchableOpacity 
+              style={styles.logoutButton}
+              onPress={handleLogout}
+            >
+              <Ionicons name="log-out-outline" size={24} color="#666" />
+            </TouchableOpacity>
           </View>
           <View style={styles.infoContainer}>
             <Text style={styles.infoText}>기업이 이력서 열람/제안시 개인정보는 정상 노출됩니다.</Text>
@@ -527,6 +550,12 @@ const styles = StyleSheet.create({
     fontSize: 14,
     lineHeight: 20,
     color: '#333',
+  },
+  logoutButton: {
+    padding: 8,
+    position: 'absolute',
+    right: 0,
+    top: 0,
   },
 });
 
