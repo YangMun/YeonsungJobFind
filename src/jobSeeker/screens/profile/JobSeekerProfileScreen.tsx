@@ -6,6 +6,7 @@ import { StackNavigationProp } from '@react-navigation/stack';
 import { useAuth } from '../../../context/AuthContext';
 import axios from 'axios';
 import { API_URL, NormalInfoDisplay, maskPhoneNumber, maskEmail, convertGradInfo, GradInfoDisplay, ExperienceActivityData, convertExperienceActivity, CertificationData, convertCertification, CareerStatement } from '../../../common/utils/validationUtils';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 interface ContactItemProps {
   icon: keyof typeof Ionicons.glyphMap;
@@ -77,6 +78,8 @@ const JobSeekerProfileScreen = () => {
     navigation.navigate('ProfileEditView');
   };
 
+  const { logout } = useAuth();
+
   const handleLogout = () => {
     Alert.alert(
       '로그아웃',
@@ -88,7 +91,19 @@ const JobSeekerProfileScreen = () => {
         },
         {
           text: '로그아웃',
-          onPress: () => navigation.navigate('Login')
+          onPress: async () => {
+            try {
+              await AsyncStorage.removeItem('userType');
+              await AsyncStorage.removeItem('userId');
+              logout(); // AuthContext의 logout 함수 호출
+              navigation.reset({
+                index: 0,
+                routes: [{ name: 'Login' }],
+              });
+            } catch (error) {
+              console.error('로그아웃 중 오류:', error);
+            }
+          }
         }
       ]
     );
