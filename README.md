@@ -12,6 +12,7 @@ YEONSUNG_JOBFIND는 연성대학교 학생들을 위한 구직 플랫폼 앱입�
 ## Flow Chart
 <img width="1713" alt="FlowChart" src="https://github.com/user-attachments/assets/a1e0ab1f-9782-43f2-9def-b76d3e0a1d48">
 
+
 ## 프로젝트 구조
 
 ```
