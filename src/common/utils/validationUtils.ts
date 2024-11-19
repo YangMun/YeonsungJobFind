@@ -493,7 +493,7 @@ export const formatExperienceDate = (input: string): string => {
   
   // 월이 0이거나 12를 초과하는 경우 처리
   if (monthNum === 0 || monthNum > 12) {
-    // 마지��� 숫자를 사용하여 1~12 사이의 값으로 변환
+    // 마지 숫자를 사용하여 1~12 사이의 값으로 변환
     monthNum = parseInt(month.slice(-1));
     // 만약 마지막 숫자가 0이면 1로 설정
     if (monthNum === 0) monthNum = 1;
@@ -689,3 +689,20 @@ export interface JobPostDetail {
     };
   };
 }
+
+// 구인자 정보 인터페이스
+export interface EmployerInfo {
+  id: string;
+  department_name: string;
+  phone_number: string;
+  email: string;
+}
+
+// 구직자 정보 인터페이스
+export interface JobSeekerInfo {
+  id: string;
+  email: string;
+}
+
+// 사용자 타입 필터 옵션
+export type UserFilterType = 'all' | 'employer' | 'jobSeeker';
