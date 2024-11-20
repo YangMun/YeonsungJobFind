@@ -1198,7 +1198,7 @@ app.get('/api/jobseeker/applications/:jobSeekerId', async (req, res) => {
 app.get('/api/postManagement/getAllPostJob', async (req, res) => {
   
   try {
-    const query = 'SELECT title, company_name FROM PostJob';
+    const query = 'SELECT id, title, contents, company_name FROM PostJob';
     
     const [applications] = await pool.query(query);
     res.json({ success: true, applications });
