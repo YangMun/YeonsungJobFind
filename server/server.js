@@ -1196,13 +1196,29 @@ app.get('/api/jobseeker/applications/:jobSeekerId', async (req, res) => {
 
 // 구인 공고 전체 조회 API
 app.get('/api/postManagement/getAllPostJob', async (req, res) => {
-  
   try {
     const query = 'SELECT id, title, contents, company_name FROM PostJob';
     
     const [applications] = await pool.query(query);
     res.json({ success: true, applications });
   } catch (error) {
+    console.error('데이터베이스 오류:', error);
+    res.status(500).json({ success: false, message: '서버 오류가 발생했습니다.' });
+  }
+});
+
+// 구인 공고 매니저 삭제 API
+app.delete('/api/postManagement/deleteManagerPostJob/:id', async (req, res) => {
+  const { deleteId } = req.params;
+  try {
+    const query = 'DELETE FROM PostJob WHERE id = ?';
+    
+    const [applications] = await pool.query(query, [deleteId]);
+    res.json({ success: true, applications });
+    await pool.query('COMMIT');
+    res.json({ success: true, message: '삭제되었습니다.' });
+  } catch (error) {
+    await pool.query('ROLLBACK');
     console.error('데이터베이스 오류:', error);
     res.status(500).json({ success: false, message: '서버 오류가 발생했습니다.' });
   }
