@@ -1,12 +1,12 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, SafeAreaView, Platform, Modal, FlatList, Image } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, SafeAreaView, Platform, Modal, FlatList, Image, Linking } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import {Message} from '../../common/utils/validationUtils';
 // import bmo from '../../assets/bmo.png'
 // 미리 정의된 응답들
 const predefinedResponses = {
   '지원 방법': '채용공고 상세페이지에서 지원하기 버튼을 클릭하시면 됩니다.',
-  '로드 맵': { type: 'image', source: require('../../assets/loadMap.png') },
+  '캠퍼스 지도': { type: 'image', source: require('../../assets/loadMap.png') },
   '이력서': '프로필 > 이력서 수정하기에서 이력서를 작성하실 수 있습니다.',
   '면접 서류 발급처': '학생복지센터 > One-stop Service Center 에서 받을 수 있습니다.',
   '채용 절차': '1.모집 공고 지원\n2.면접 요망시 서류 지참하여 해당 부서 방문\n3.서류 One-stop에 제출 후 안내받기',
@@ -15,7 +15,7 @@ const predefinedResponses = {
 // 선택 메뉴 옵션 추가
 const menuOptions = [
   { id: '1', icon: '➕', title: '지원 방법' },
-  { id: '2', icon: '🗺️', title: '로드 맵' },
+  { id: '2', icon: '🗺️', title: '캠퍼스 지도' },
   { id: '3', icon: '📄', title: '이력서' },
   { id: '4', icon: 'ℹ️', title: '면접 서류 발급처' },
   { id: '5', icon: '📌', title: '채용 절차' },
@@ -141,7 +141,7 @@ const buildingOptions = [
     id: 'b11', 
     title: '학생복지센터',
     departments: [
-      '학생업처',
+      '학생취업처',
       '학생상담센터',
       '원스톱서비스센터',
       '커리어라운지',
@@ -156,6 +156,7 @@ const buildingOptions = [
     id: 'b12', 
     title: '연곡문화센터',
     departments: [
+      '생활관',
       '평생교육원',
       '국제교류원',
       '유아교육과',
@@ -284,7 +285,7 @@ const MessageScreen = () => {
                       isUser: true,
                     };
                     
-                    if (option.title === '로드 맵') {
+                    if (option.title === '캠퍼스 지도') {
                       const botImageMessage: Message = {
                         id: (Date.now() + 1).toString(),
                         image: (predefinedResponses[option.title] as {source: any}).source,
@@ -350,13 +351,21 @@ const MessageScreen = () => {
                   ]}>{item.text}</Text>
                 )}
                 {item.image && (
-                  <TouchableOpacity onPress={() => setSelectedImage(item.image)}>
-                    <Image 
-                      source={item.image} 
-                      style={styles.messageImage}
-                      resizeMode="contain"
-                    />
-                  </TouchableOpacity>
+                  <View>
+                    <TouchableOpacity onPress={() => setSelectedImage(item.image)}>
+                      <Image 
+                        source={item.image} 
+                        style={styles.messageImage}
+                        resizeMode="contain"
+                      />
+                    </TouchableOpacity>
+                    <TouchableOpacity 
+                      style={styles.arLinkButton}
+                      onPress={() => Linking.openURL('https://vr2.dreamvrad.net/ysu/')}
+                    >
+                      <Text style={styles.arLinkText}>AR로 확인</Text>
+                    </TouchableOpacity>
+                  </View>
                 )}
                 {item.buildingOptions && (
                   <View style={styles.buildingOptionsContainer}>
@@ -617,6 +626,20 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#333',
     lineHeight: 20,
+    fontWeight: '500',
+  },
+  arLinkButton: {
+    backgroundColor: '#007AFF',
+    padding: 10,
+    borderRadius: 8,
+    marginTop: 8,
+    alignSelf: 'center',
+    minWidth: 100,
+  },
+  arLinkText: {
+    color: '#FFFFFF',
+    fontSize: 14,
+    textAlign: 'center',
     fontWeight: '500',
   },
 });
