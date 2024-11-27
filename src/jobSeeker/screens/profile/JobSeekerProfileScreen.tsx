@@ -93,8 +93,13 @@ const JobSeekerProfileScreen = () => {
           text: '로그아웃',
           onPress: async () => {
             try {
+              // 기존 데이터 삭제
               await AsyncStorage.removeItem('userType');
               await AsyncStorage.removeItem('userId');
+              
+              // 임시 저장 데이터 삭제
+              await AsyncStorage.removeItem(`@temp_career_${userId}`);
+              
               logout(); // AuthContext의 logout 함수 호출
               navigation.reset({
                 index: 0,
@@ -285,7 +290,7 @@ const styles = StyleSheet.create({
   },
   scrollContainer: {
     padding: 16,
-    paddingBottom: 100, // 하단 버튼을 가리지 않도록 여백 추가
+    paddingBottom: 100, // 하단 버튼�� 가리지 않도록 여백 추가
   },
   profileContainer: {
     flexDirection: 'row',

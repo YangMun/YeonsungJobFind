@@ -10,7 +10,7 @@ type RootTabParamList = {
   홈: undefined;
   알림: undefined;
   메시지: undefined;
-  프로필: undefined;
+  이력서: undefined;
 };
 
 const Tab = createBottomTabNavigator<RootTabParamList>();
@@ -29,7 +29,7 @@ const JobSeekerMainScreen = () => {
             iconName = focused ? 'notifications' : 'notifications-outline';
           } else if (route.name === '메시지') {
             iconName = focused ? 'mail' : 'mail-outline';
-          } else if (route.name === '프로필') {
+          } else if (route.name === '이력서') {
             iconName = focused ? 'person' : 'person-outline';
           }
 
@@ -42,7 +42,7 @@ const JobSeekerMainScreen = () => {
       <Tab.Screen name="홈" component={HomeScreen} />
       <Tab.Screen name="알림" component={NotificationScreen} />
       <Tab.Screen name="메시지" component={MessageScreen} />
-      <Tab.Screen name="프로필" component={JobSeekerProfileScreen} />
+      <Tab.Screen name="이력서" component={JobSeekerProfileScreen} />
     </Tab.Navigator>
   );
 };

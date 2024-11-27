@@ -6,6 +6,7 @@ import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useAuth } from '../../../context/AuthContext';
 import axios from 'axios';
 import { API_URL, validateCareerSections } from '../../../common/utils/validationUtils';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 type RootStackParamList = {
   ProfileEditView: { updatedCareerText: string } | undefined;
@@ -157,6 +158,49 @@ const MyCareerEditView = () => {
     }
   };
 
+  const handleTempSave = async () => {
+    try {
+      const tempData = {
+        sections: careerSections,
+        timestamp: new Date().toISOString()
+      };
+      
+      await AsyncStorage.setItem(`@temp_career_${userId}`, JSON.stringify(tempData));
+      
+      Alert.alert(
+        '임시저장 완료',
+        '작성하신 내용이 임시저장되었습니다.',
+        [
+          {
+            text: '확인',
+            onPress: () => navigation.goBack()
+          }
+        ]
+      );
+    } catch (error) {
+      console.error('임시저장 오류:', error);
+      Alert.alert('오류', '임시저장 중 문제가 발생했습니다.');
+    }
+  };
+
+  useEffect(() => {
+    const loadTempData = async () => {
+      try {
+        const tempDataString = await AsyncStorage.getItem(`@temp_career_${userId}`);
+        if (tempDataString) {
+          const tempData = JSON.parse(tempDataString);
+          setCareerSections(tempData.sections);
+        }
+      } catch (error) {
+        console.error('임시저장 데이터 로드 오류:', error);
+      }
+    };
+
+    if (!route.params?.initialCareerText) {
+      loadTempData();
+    }
+  }, []);
+
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
@@ -164,7 +208,12 @@ const MyCareerEditView = () => {
           <Ionicons name="chevron-back" size={24} color="#000" />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>자기소개서</Text>
-        <View style={styles.placeholder} />
+        <TouchableOpacity 
+          style={styles.tempSaveButton} 
+          onPress={handleTempSave}
+        >
+          <Text style={styles.tempSaveText}>임시저장</Text>
+        </TouchableOpacity>
       </View>
       <ScrollView style={styles.content}>
         {careerSections.map((section, index) => (
@@ -237,8 +286,13 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: 'bold',
   },
-  placeholder: {
-    width: 40,
+  tempSaveButton: {
+    padding: 8,
+  },
+  tempSaveText: {
+    fontSize: 14,
+    color: '#4a90e2',
+    fontWeight: '500',
   },
   content: {
     flex: 1,
