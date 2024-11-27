@@ -179,7 +179,11 @@ const buildingOptions = [
 ];
 
 const MessageScreen = () => {
-  const [messages, setMessages] = useState<Message[]>([]);
+  const [messages, setMessages] = useState<Message[]>([{
+    id: Date.now().toString(),
+    text: '안녕하세요! 무엇을 도와드릴까요?',
+    isUser: false,
+  }]);
   const [inputText, setInputText] = useState('');
   const [showMenu, setShowMenu] = useState(false);
   const [selectedImage, setSelectedImage] = useState<any>(null);
@@ -193,23 +197,6 @@ const MessageScreen = () => {
       }, 100);
     }
   }, [messages]);
-
-  // 탭이 포커스될 때마 메시지 초기화 및 초기 메시지 설정
-  useFocusEffect(
-    React.useCallback(() => {
-      // 초기화
-      setInputText('');
-      
-      // 초기 봇 메시지 설정
-      const initialBotMessage: Message = {
-        id: Date.now().toString(),
-        text: '안녕하세요! 무엇을 도와드릴까요?',
-        isUser: false,
-      };
-      
-      setMessages([initialBotMessage]);
-    }, [])
-  );
 
   const handleSend = () => {
     if (!inputText.trim()) return;
