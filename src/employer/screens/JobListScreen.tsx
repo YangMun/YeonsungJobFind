@@ -8,7 +8,7 @@
 import React, { useState, useCallback } from 'react';
 import { View, StyleSheet, FlatList, TouchableOpacity, Text, SafeAreaView, RefreshControl, Platform } from 'react-native';
 import axios from 'axios';
-import { useAuth } from '../../context/AuthContext';
+import { useAuth } from '../../context/AuthContext'; // AuthContext import 추가
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { RootStackParamList } from '../../navigation/AppNavigator';
@@ -18,13 +18,13 @@ type JobListScreenNavigationProp = StackNavigationProp<RootStackParamList, 'Empl
 
 const JobListScreen: React.FC = () => {
   const [jobs, setJobs] = useState<Job[]>([]);
-  const { userId } = useAuth();
+  const { userId } = useAuth(); // AuthContext에서 userId 가져오기
   const [activeTab, setActiveTab] = useState<'active' | 'closed'>('active');
   const [refreshing, setRefreshing] = useState(false);
   const navigation = useNavigation<JobListScreenNavigationProp>();
 
   const fetchJobs = useCallback(async () => {
-    if (!userId) return;
+    if (!userId) return; // userId가 없으면 함수 종료
     try {
       const response = await axios.get(`${API_URL}/api/job-list/${userId}?status=${activeTab}`);
       if (response.data.success) {
@@ -32,7 +32,6 @@ const JobListScreen: React.FC = () => {
       }
     } catch (error) {
       console.error('API 요청 오류:', error);
-      setJobs([]);
     }
   }, [userId, activeTab]);
 
@@ -50,34 +49,29 @@ const JobListScreen: React.FC = () => {
 
   const handleTabPress = (tab: 'active' | 'closed') => {
     setActiveTab(tab);
-    fetchJobs();
+    fetchJobs(); // 탭을 누를 때마다 데이터를 새로 불러옵니다.
   };
 
+  // 날짜 포맷팅 함수 추가
   const formatDate = (dateString: string) => {
     if (!dateString) return '';
+
+    // 이미 YYYY-MM-DD 형식이면 그대로 반환
     if (/^\d{4}-\d{2}-\d{2}$/.test(dateString)) {
       return dateString;
     }
+
+    // UTC 시간을 로컬 시간으로 변환
     const date = new Date(dateString);
     const utc = date.getTime() + (date.getTimezoneOffset() * 60000);
-    const localDate = new Date(utc + (9 * 60 * 60 * 1000));
+    const localDate = new Date(utc + (9 * 60 * 60 * 1000)); // KST (+9)
+
     return localDate.toISOString().split('T')[0];
   };
 
   const truncateContent = (content: string, maxLength: number) => {
     return content.length > maxLength ? content.substring(0, maxLength) + '...' : content;
   };
-
-  const EmptyComponent = () => (
-    <View style={styles.emptyContainer}>
-      <View style={styles.emptyIcon}>
-        <View style={styles.emptyIconCorner} />
-      </View>
-      <Text style={styles.emptyText}>
-        {activeTab === 'active' ? '아직 등록한 공고가 없습니다' : '마감된 공고가 없습니다'}
-      </Text>
-    </View>
-  );
 
   const renderJobItem = ({ item }: { item: Job }) => (
     <TouchableOpacity 
@@ -120,14 +114,10 @@ const JobListScreen: React.FC = () => {
           data={jobs}
           renderItem={renderJobItem}
           keyExtractor={(item) => item.id.toString()}
-          contentContainerStyle={[
-            styles.listContainer,
-            jobs.length === 0 && styles.emptyListContainer
-          ]}
+          contentContainerStyle={styles.listContainer}
           refreshControl={
             <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
           }
-          ListEmptyComponent={EmptyComponent}
         />
       </View>
     </SafeAreaView>
@@ -148,7 +138,7 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-start',
     paddingHorizontal: 16,
     paddingVertical: 12,
-    backgroundColor: '#f8f9fa',
+    backgroundColor: '#f8f9fa', // 전체 배경색과 동일하게 변경
     borderBottomWidth: 1,
     borderBottomColor: '#e0e3e8',
   },
@@ -174,7 +164,7 @@ const styles = StyleSheet.create({
     padding: 16,
   },
   jobItem: {
-    flexDirection: 'row',
+    flexDirection: 'row', // 변경: 가로 방향으로 내용 배치
     backgroundColor: '#ffffff',
     borderRadius: 12,
     padding: 16,
@@ -227,37 +217,6 @@ const styles = StyleSheet.create({
   arrow: {
     fontSize: 20,
     color: '#adb5bd',
-  },
-  emptyContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    paddingVertical: 50,
-  },
-  emptyIcon: {
-    width: 60,
-    height: 70,
-    backgroundColor: '#CED4DA',
-    borderRadius: 4,
-    marginBottom: 16,
-    position: 'relative',
-  },
-  emptyIconCorner: {
-    position: 'absolute',
-    right: 0,
-    top: 0,
-    width: 15,
-    height: 15,
-    backgroundColor: '#f8f9fa',  // 배경색과 동일
-    transform: [{ rotate: '45deg' }],
-  },
-  emptyText: {
-    fontSize: 16,
-    color: '#6c757d',
-    textAlign: 'center',
-  },
-  emptyListContainer: {
-    flexGrow: 1,
   },
 });
 
