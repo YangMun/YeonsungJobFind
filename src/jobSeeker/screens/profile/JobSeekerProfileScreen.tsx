@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, ScrollView, SafeAreaView, TouchableOpacity, Image } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, SafeAreaView, TouchableOpacity, Image, Alert } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { useAuth } from '../../../context/AuthContext';
 import axios from 'axios';
 import { API_URL, NormalInfoDisplay, maskPhoneNumber, maskEmail, convertGradInfo, GradInfoDisplay, ExperienceActivityData, convertExperienceActivity, CertificationData, convertCertification, CareerStatement } from '../../../common/utils/validationUtils';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 interface ContactItemProps {
   icon: keyof typeof Ionicons.glyphMap;
@@ -77,6 +78,42 @@ const JobSeekerProfileScreen = () => {
     navigation.navigate('ProfileEditView');
   };
 
+  const { logout } = useAuth();
+
+  const handleLogout = () => {
+    Alert.alert(
+      '로그아웃',
+      '정말 로그아웃 하시겠습니까?',
+      [
+        {
+          text: '취소',
+          style: 'cancel'
+        },
+        {
+          text: '로그아웃',
+          onPress: async () => {
+            try {
+              // 기존 데이터 삭제
+              await AsyncStorage.removeItem('userType');
+              await AsyncStorage.removeItem('userId');
+              
+              // 임시 저장 데이터 삭제
+              await AsyncStorage.removeItem(`@temp_career_${userId}`);
+              
+              logout(); // AuthContext의 logout 함수 호출
+              navigation.reset({
+                index: 0,
+                routes: [{ name: 'Login' }],
+              });
+            } catch (error) {
+              console.error('로그아웃 중 오류:', error);
+            }
+          }
+        }
+      ]
+    );
+  };
+
   return (
     <View style={styles.container}>
       <SafeAreaView style={styles.safeArea}>
@@ -100,6 +137,12 @@ const JobSeekerProfileScreen = () => {
                   : '정보 없음'}
               </Text>
             </View>
+            <TouchableOpacity 
+              style={styles.logoutButton}
+              onPress={handleLogout}
+            >
+              <Ionicons name="log-out-outline" size={24} color="#666" />
+            </TouchableOpacity>
           </View>
           <View style={styles.infoContainer}>
             <Text style={styles.infoText}>기업이 이력서 열람/제안시 개인정보는 정상 노출됩니다.</Text>
@@ -247,7 +290,7 @@ const styles = StyleSheet.create({
   },
   scrollContainer: {
     padding: 16,
-    paddingBottom: 100, // 하단 버튼을 가리지 않도록 여백 추가
+    paddingBottom: 100, // 하단 버튼�� 가리지 않도록 여백 추가
   },
   profileContainer: {
     flexDirection: 'row',
@@ -527,6 +570,12 @@ const styles = StyleSheet.create({
     fontSize: 14,
     lineHeight: 20,
     color: '#333',
+  },
+  logoutButton: {
+    padding: 8,
+    position: 'absolute',
+    right: 0,
+    top: 0,
   },
 });
 

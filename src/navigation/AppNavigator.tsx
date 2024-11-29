@@ -1,4 +1,6 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useAuth } from '../context/AuthContext';
 import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
 import LoginScreen from '../auth/screens/LoginScreen';
@@ -15,7 +17,7 @@ import MyCareerEditView from '../jobSeeker/screens/profile/MyCareerEditView';
 import GradInfo from '../jobSeeker/screens/profile/GradInfo';
 import ExperienceActivityEducationForm from '../jobSeeker/screens/profile/ExperienceActivity';
 import CertificationForm from '../jobSeeker/screens/profile/CertificationForm';
-import ManagerMain from '../manager/ManagerMain';
+import ManagerMain from '../manager/screens/ManagerMain';
 
 export type RootStackParamList = {
   Login: undefined;
@@ -38,10 +40,43 @@ export type RootStackParamList = {
 const Stack = createStackNavigator<RootStackParamList>();
 
 const AppNavigator = () => {
+  const [isLoading, setIsLoading] = useState(true);
+  const [initialRoute, setInitialRoute] = useState<keyof RootStackParamList>('Login');
+  const { setUserId } = useAuth();
+
+  useEffect(() => {
+    // 앱 시작 시 저장된 로그인 정보 확인
+    const checkLoginStatus = async () => {
+      try {
+        const storedUserType = await AsyncStorage.getItem('userType');
+        const storedUserId = await AsyncStorage.getItem('userId');
+
+        if (storedUserType && storedUserId) {
+          setUserId(storedUserId);
+          if (storedUserType === 'jobSeeker') {
+            setInitialRoute('JobSeekerMain');
+          } else if (storedUserType === 'employer') {
+            setInitialRoute('EmployerMain');
+          }
+        }
+      } catch (error) {
+        console.error('자동 로그인 확인 중 오류:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    checkLoginStatus();
+  }, []);
+
+  if (isLoading) {
+    return null; // 또는 로딩 스피너 표시
+  }
+
   return (
     <NavigationContainer>
       <Stack.Navigator 
-        initialRouteName="Login" 
+        initialRouteName={initialRoute}
         screenOptions={{ 
           headerShown: false,
           gestureEnabled: false,

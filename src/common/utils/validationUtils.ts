@@ -29,6 +29,8 @@ export interface Message {
   text?: string;
   image?: any;
   isUser: boolean;
+  buildingOptions?: boolean;
+  departments?: string[];
 }
 
 interface PostJobData {
@@ -282,8 +284,15 @@ export const validatePostJob = (data: PostJobData): PostJobValidationResult => {
 
   // 3. 날짜 형식 확인 (YYYY-MM-DD)
   const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
+  const today = new Date();
   if (!dateRegex.test(data.workPeriodStart) || !dateRegex.test(data.workPeriodEnd) || !dateRegex.test(data.recruitmentDeadline)) {
     return { isValid: false, message: '날짜 형식이 안 맞아요' };
+  }
+  const workPeriodStart = new Date(data.workPeriodStart);
+  const workPeriodEnd = new Date(data.workPeriodEnd);
+  const recruitmentDeadline = new Date(data.recruitmentDeadline);
+  if (workPeriodStart > today || workPeriodEnd > today || recruitmentDeadline > today){
+    return { isValid: false, message: '현재 날짜보다 이후의 날짜입니다' };
   }
 
   // 4. 전화번호 형식 확인 (선택적)
@@ -319,8 +328,12 @@ export const validateNormalInfo = (data: NormalInfoData): ValidationResult => {
 
   // 이메일 형식 확인
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  const allowedDomains = /\.(com|ru|net|kr|edu|cz|mil|gov|co)$/;
   if (!emailRegex.test(data.email)) {
     return { isValid: false, message: '올바른 이메일 형식이 아닙니다.' };
+  }
+  if(!allowedDomains.test(data.email)){
+    return { isValid: false, message: '허용되지 않은 이메일 도메인입니다.' };
   }
 
   // 휴대폰 번호 형 확인
@@ -385,7 +398,7 @@ export const validateGradInfo = (data: GradInfoData): ValidationResult => {
   // 재학기간 형식 검사
   const dateRegex = /^\d{4}\.(0[1-9]|1[0-2])$/;
   if (!dateRegex.test(data.admissionDate) || !dateRegex.test(data.graduationDate)) {
-    return { isValid: false, message: '재학기간은 YYYY.MM 형식��로 입력해주세요.' };
+    return { isValid: false, message: '재학기간은 YYYY.MM 형식로 입력해주세요.' };
   }
 
   // 졸업여부 유효성 사
@@ -466,7 +479,7 @@ export const validateExperienceActivity = (data: ExperienceActivityData): Valida
     return { isValid: false, message: '날짜는 YYYY-MM 형식으로 입력해주세요.' };
   }
 
-  // 활동내용 길�� 검사
+  // 활동내용 길 검사
   if (data.description.length > 500) {
     return { isValid: false, message: '활동내용은 500자를 초과할 수 없습니다.' };
   }
@@ -491,7 +504,7 @@ export const formatExperienceDate = (input: string): string => {
   
   // 월이 0이거나 12를 초과하는 경우 처리
   if (monthNum === 0 || monthNum > 12) {
-    // 마지막 숫자를 사용하여 1~12 사이의 값으로 변환
+    // 마지 숫자를 사용하여 1~12 사이의 값으로 변환
     monthNum = parseInt(month.slice(-1));
     // 만약 마지막 숫자가 0이면 1로 설정
     if (monthNum === 0) monthNum = 1;
@@ -687,3 +700,20 @@ export interface JobPostDetail {
     };
   };
 }
+
+// 구인자 정보 인터페이스
+export interface EmployerInfo {
+  id: string;
+  department_name: string;
+  phone_number: string;
+  email: string;
+}
+
+// 구직자 정보 인터페이스
+export interface JobSeekerInfo {
+  id: string;
+  email: string;
+}
+
+// 사용자 타입 필터 옵션
+export type UserFilterType = 'all' | 'employer' | 'jobSeeker';

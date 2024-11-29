@@ -381,7 +381,7 @@ app.get('/api/departments', async (req, res) => {
     const departments = rows.map(row => row.department_name);
     res.json({ success: true, departments });
   } catch (error) {
-    console.error('데이터베이스 오류:', error);
+    console.error('데이터베이 오류:', error);
     res.status(500).json({ success: false, message: '서버 오류가 발생했습니다.' });
   }
 });
@@ -675,7 +675,7 @@ app.get('/api/get-experience-activities/:jobSeekerId', async (req, res) => {
         activities: activities 
       });
     } else {
-      res.json({ success: false, message: '경험/활동/교육 정보가 없습니다.' });
+      res.json({ success: false, message: '경험/활동/교육 정가 없습니다.' });
     }
   } catch (error) {
     console.error('데이터베이스 오류:', error);
@@ -798,7 +798,7 @@ app.post('/api/update-certification', async (req, res) => {
     return res.status(400).json({ success: false, message: '모든 필드를 입력해주세요.' });
   }
 
-  // 길이 제한 검사
+  // 길이 한 검사
   if (certificationName.length > 50) {
     return res.status(400).json({ success: false, message: '자격증명은 50자를 초과할 수 없습니다.' });
   }
@@ -839,7 +839,7 @@ app.post('/api/update-certification', async (req, res) => {
 
     res.json({ 
       success: true, 
-      message: '자격증 정보가 성공적으로 수정되었습니다.' 
+      message: '자격증 정보가 성공으로 수정되었습니다.' 
     });
   } catch (error) {
     console.error('데이터베이스 오류:', error);
@@ -1193,35 +1193,6 @@ app.get('/api/jobseeker/applications/:jobSeekerId', async (req, res) => {
     res.status(500).json({ success: false, message: '서버 오류가 발생했습니다.' });
   }
 });
-
-
-// 사용자 데이터 조회 API
-app.get('/api/users', async (req, res) => {
-  const { userType } = req.query;
-
-  try {
-    let table;
-
-    // userType에 따라 테이블을 선택
-    if (userType === 'jobSeeker') {
-      table = 'jobSeeker';
-    } else if (userType === 'employer') {
-      table = 'employer';
-    } else {
-      return res.status(400).json({ success: false, message: '유효하지 않은 사용자 유형입니다.' });
-    }
-
-    // 사용자 데이터 조회 쿼리
-    const [rows] = await pool.query(`SELECT * FROM ${table}`);
-
-    // 데이터 반환
-    res.json({ success: true, userType, users: rows });
-  } catch (error) {
-    console.error('데이터베이스 오류:', error);
-    res.status(500).json({ success: false, message: '서버 오류가 발생했습니다.' });
-  }
-});
-
 
 const PORT = 3000;
 app.listen(PORT, () => console.log(`서버가 http://localhost:${PORT} 에서 실행 중입니다.`));
