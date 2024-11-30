@@ -266,9 +266,25 @@ app.delete('/api/delete-job/:jobId', async (req, res) => {
   const { jobId } = req.params;
   
   try {
+    // 트랜잭션 시작
+    await pool.query('START TRANSACTION');
+
+    // 1. JobPost_Status 테이블에서 관련 데이터 삭제
+    await pool.query('DELETE FROM JobPost_Status WHERE job_id = ?', [jobId]);
+
+    // 2. postjob_apply 테이블에서 관련 데이터 삭제
+    await pool.query('DELETE FROM postjob_apply WHERE job_id = ?', [jobId]);
+
+    // 3. PostJob 테이블에서 공고 삭제
     await pool.query('DELETE FROM PostJob WHERE id = ?', [jobId]);
-    res.json({ success: true, message: '구인 공고가 성공 제되었다.' });
+
+    // 트랜잭션 커밋
+    await pool.query('COMMIT');
+
+    res.json({ success: true, message: '구인 공고가 성공적으로 삭제되었습니다.' });
   } catch (error) {
+    // 오류 발생 시 롤백
+    await pool.query('ROLLBACK');
     console.error('데이터베이스 오류:', error);
     res.status(500).json({ success: false, message: '서버 오류가 발생했습니다.' });
   }
