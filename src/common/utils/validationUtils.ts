@@ -335,6 +335,7 @@ export const validateNormalInfo = (data: NormalInfoData): ValidationResult => {
   if(!allowedDomains.test(data.email)){
     return { isValid: false, message: '허용되지 않은 이메일 도메인입니다.' };
   }
+  
 
   // 휴대폰 번호 형 확인
   const phoneRegex = /^\d{3}\d{3,4}\d{4}$/;
