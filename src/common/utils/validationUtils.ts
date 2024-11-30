@@ -284,8 +284,15 @@ export const validatePostJob = (data: PostJobData): PostJobValidationResult => {
 
   // 3. 날짜 형식 확인 (YYYY-MM-DD)
   const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
+  const today = new Date();
   if (!dateRegex.test(data.workPeriodStart) || !dateRegex.test(data.workPeriodEnd) || !dateRegex.test(data.recruitmentDeadline)) {
     return { isValid: false, message: '날짜 형식이 안 맞아요' };
+  }
+  const workPeriodStart = new Date(data.workPeriodStart);
+  const workPeriodEnd = new Date(data.workPeriodEnd);
+  const recruitmentDeadline = new Date(data.recruitmentDeadline);
+  if (workPeriodStart > today || workPeriodEnd > today || recruitmentDeadline > today){
+    return { isValid: false, message: '현재 날짜보다 이후의 날짜입니다' };
   }
 
   // 4. 전화번호 형식 확인 (선택적)
@@ -321,8 +328,12 @@ export const validateNormalInfo = (data: NormalInfoData): ValidationResult => {
 
   // 이메일 형식 확인
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  const allowedDomains = /\.(com|ru|net|kr|edu|cz|mil|gov|co)$/;
   if (!emailRegex.test(data.email)) {
     return { isValid: false, message: '올바른 이메일 형식이 아닙니다.' };
+  }
+  if(!allowedDomains.test(data.email)){
+    return { isValid: false, message: '허용되지 않은 이메일 도메인입니다.' };
   }
 
   // 휴대폰 번호 형 확인

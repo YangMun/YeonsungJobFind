@@ -24,7 +24,7 @@ export type RootStackParamList = {
   SignUp: undefined;
   JobSeekerMain: undefined;
   EmployerMain: undefined;
-  JobSeekerDetail: { jobId: number };
+  JobSeekerDetail: { user: number; userType: string };
   EmployerJobDetail: { jobId: number };
   EditJob: { jobId: number };
   JobSeekerProfile: undefined;
