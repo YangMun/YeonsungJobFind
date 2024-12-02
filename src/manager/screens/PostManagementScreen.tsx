@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, Button, StyleSheet, ActivityIndicator, FlatList } from 'react-native';
+import { View, Text, Button, StyleSheet, ActivityIndicator, FlatList, Alert, TouchableOpacity } from 'react-native';
 import { Picker } from '@react-native-picker/picker';
 import axios from 'axios';
 import { API_URL } from '../../common/utils/validationUtils';
+import Icon from 'react-native-vector-icons/MaterialIcons';
 
 //헤더
 const Header = () => {
@@ -48,15 +49,49 @@ const DataList: React.FC = () => {
     setLoading(false);
   }, [data]);  // data가 변경될 때마다 실행
 
+  const deletePost = async (id: number) => {
+    try {
+      console.log(`삭제 요청 시작: ID=${id}`);
+      const response = await axios.delete(`${API_URL}/api/postManagement/deleteManagerPostJob/${id}`);
+      console.log('서버 응답:', response.status);
+  
+      if (response.status === 200) {
+        setData((prevData) => prevData.filter((item) => item.id !== id));
+        Alert.alert('삭제 성공', '글이 성공적으로 삭제되었습니다.');
+      } else {
+        Alert.alert('삭제 실패', `서버 응답 코드: ${response.status}`);
+      }
+    } catch (error) {
+      console.error('삭제 중 오류 발생:', error);
+      Alert.alert('삭제 실패', '글을 삭제하는 중 오류가 발생했습니다.');
+    }
+  };
+
+  // 삭제 버튼 클릭 시 확인 알림
+  const handleDelete = (id: number) => {
+    deletePost(id);
+    Alert.alert(
+      '글 삭제',
+      '정말 이 글을 삭제하시겠습니까?',
+      [
+        { text: '취소', style: 'cancel' },
+        { text: '삭제', onPress: () => deletePost(id) }, // 삭제 함수 호출
+      ]
+    );
+  };
+
   // 각 항목을 렌더링하는 함수
   const renderItem = ({ item }: { item: PostData }) => (
-    <View style={styles.item}>
-      <View style={styles.textContainer}>
-        <Text style={styles.title}>제목: {item.title}</Text>
-        <Text style={styles.contents}>내용: {item.contents}</Text>
-        <Text style={styles.company}>회사: {item.company_name}</Text>
+      <View style={styles.item}>
+        <View style={styles.textContainer}>
+          <Text style={styles.title}>제목: {item.title}</Text>
+          <Text style={styles.contents}>내용: {item.contents}</Text>
+          <Text style={styles.company}>회사: {item.company_name}</Text>
+        </View>
+        <TouchableOpacity style={styles.deleteButton} onPress={() => handleDelete(item.id)}>
+        <Icon name="delete" size={24} color="#fff" />
+      </TouchableOpacity>
       </View>
-    </View>
   );
 
   return (
@@ -194,6 +229,18 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: '600',
     color: '#1a73e8', // 파란색 강조 텍스트
+  },
+  deleteButton: {
+    backgroundColor: '#ff4d4f', // 빨간색 버튼
+    padding: 4,
+    borderRadius: 16, // 둥근 모서리
+    justifyContent: 'center',
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.2,
+    shadowRadius: 2,
+    elevation: 3, // Android 그림자
   },
 });
 
