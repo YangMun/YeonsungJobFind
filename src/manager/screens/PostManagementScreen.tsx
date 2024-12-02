@@ -49,12 +49,18 @@ const DataList: React.FC = () => {
     setLoading(false);
   }, [data]);  // data가 변경될 때마다 실행
 
-  // 글 삭제 요청
   const deletePost = async (id: number) => {
     try {
-      await axios.delete(`${API_URL}/api/postManagement/deleteManagerPostJob/${id}`); // DELETE 요청
-      setData((prevData) => prevData.filter((item) => item.id !== id)); // UI에서 글 제거
-      Alert.alert('삭제 성공', '글이 성공적으로 삭제되었습니다.');
+      console.log(`삭제 요청 시작: ID=${id}`);
+      const response = await axios.delete(`${API_URL}/api/postManagement/deleteManagerPostJob/${id}`);
+      console.log('서버 응답:', response.status);
+  
+      if (response.status === 200) {
+        setData((prevData) => prevData.filter((item) => item.id !== id));
+        Alert.alert('삭제 성공', '글이 성공적으로 삭제되었습니다.');
+      } else {
+        Alert.alert('삭제 실패', `서버 응답 코드: ${response.status}`);
+      }
     } catch (error) {
       console.error('삭제 중 오류 발생:', error);
       Alert.alert('삭제 실패', '글을 삭제하는 중 오류가 발생했습니다.');

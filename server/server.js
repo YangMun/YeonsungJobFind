@@ -1209,18 +1209,28 @@ app.get('/api/postManagement/getAllPostJob', async (req, res) => {
 
 // 구인 공고 매니저 삭제 API
 app.delete('/api/postManagement/deleteManagerPostJob/:id', async (req, res) => {
-  const { deleteId } = req.params;
+  const { id } = req.params;
+  const connection = await pool.getConnection();
   try {
+    await connection.beginTransaction(); // 트랜잭션 시작
+
     const query = 'DELETE FROM PostJob WHERE id = ?';
-    
-    const [applications] = await pool.query(query, [deleteId]);
-    res.json({ success: true, applications });
-    await pool.query('COMMIT');
+    const [result] = await connection.query(query, [id]);
+
+    // 삭제 결과 확인
+    if (result.affectedRows === 0) {
+      await connection.rollback(); // 롤백
+      return res.status(404).json({ success: false, message: '삭제할 데이터가 없습니다.' });
+    }
+
+    await connection.commit(); // 트랜잭션 커밋
     res.json({ success: true, message: '삭제되었습니다.' });
   } catch (error) {
-    await pool.query('ROLLBACK');
+    await connection.rollback(); // 롤백
     console.error('데이터베이스 오류:', error);
     res.status(500).json({ success: false, message: '서버 오류가 발생했습니다.' });
+  } finally {
+    connection.release(); // 연결 반환
   }
 });
 
