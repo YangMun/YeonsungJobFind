@@ -12,14 +12,10 @@ import axios from 'axios';
 import { useAuth } from '../../context/AuthContext';
 import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
-import { API_URL } from '../../common/utils/validationUtils';
+import { API_URL, ProfileData } from '../../common/utils/validationUtils';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
-// ProfileData 인터페이스 정의
-interface ProfileData {
-  department_name: string;
-  phone_number: string;
-  email: string;
-}
+
 
 // RootStackParamList 타입을 정의합니다. 실제 네비게이션 구조에 맞게 조정해야 합니다.
 type RootStackParamList = {
@@ -123,6 +119,35 @@ const ProfileScreen: React.FC = () => {
     );
   };
 
+  const handleLogout = () => {
+    Alert.alert(
+      "로그아웃",
+      "정말로 로그아웃 하시겠습니까?",
+      [
+        {
+          text: "취소",
+          style: "cancel"
+        },
+        {
+          text: "로그아웃",
+          onPress: async () => {
+            try {
+              await AsyncStorage.removeItem('userType');
+              await AsyncStorage.removeItem('userId');
+              logout(); // AuthContext의 logout 함수 호출
+              navigation.reset({
+                index: 0,
+                routes: [{ name: 'Login' }],
+              });
+            } catch (error) {
+              console.error('로그아웃 중 오류:', error);
+            }
+          }
+        }
+      ]
+    );
+  };
+
   if (isLoading) {
     return (
       <SafeAreaView style={styles.container}>
@@ -166,9 +191,20 @@ const ProfileScreen: React.FC = () => {
         >
           <Text style={styles.buttonText}>{isEditing ? '확인' : '편집'}</Text>
         </TouchableOpacity>
-        {isEditing && (
-          <TouchableOpacity style={[styles.button, styles.deleteButton]} onPress={handleDelete}>
+        
+        {isEditing ? (
+          <TouchableOpacity 
+            style={[styles.button, styles.deleteButton]} 
+            onPress={handleDelete}
+          >
             <Text style={styles.buttonText}>삭제</Text>
+          </TouchableOpacity>
+        ) : (
+          <TouchableOpacity 
+            style={[styles.button, styles.logoutButton]} 
+            onPress={handleLogout}
+          >
+            <Text style={styles.buttonText}>로그아웃</Text>
           </TouchableOpacity>
         )}
       </View>
@@ -270,6 +306,10 @@ const styles = StyleSheet.create({
   },
   deleteButton: {
     backgroundColor: '#FF3B30',
+    marginLeft: 10,
+  },
+  logoutButton: {
+    backgroundColor: '#FF9500',
     marginLeft: 10,
   },
   buttonText: {

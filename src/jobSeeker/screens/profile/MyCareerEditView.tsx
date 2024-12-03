@@ -1,11 +1,15 @@
-import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, SafeAreaView, TouchableOpacity, TextInput, ScrollView, Alert } from 'react-native';
+import React, { useState, useEffect, useCallback } from 'react';
+import { View, Text, StyleSheet, SafeAreaView, TouchableOpacity, TextInput, ScrollView, Alert, AppState, AppStateStatus, Modal } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useAuth } from '../../../context/AuthContext';
 import axios from 'axios';
 import { API_URL, validateCareerSections } from '../../../common/utils/validationUtils';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { MaterialIcons } from '@expo/vector-icons';
+import { requestClaudeResponse } from '../../utils/ClaudeUtils'
+import { AiHelpModal } from '../../components/AiHelpModal';
 
 type RootStackParamList = {
   ProfileEditView: { updatedCareerText: string } | undefined;
@@ -31,9 +35,79 @@ const MyCareerEditView = () => {
     { title: "경력사항", text: "" },
   ]);
   const [isDeleteDisabled, setIsDeleteDisabled] = useState(true);
+  const [isAiModalVisible, setIsAiModalVisible] = useState(false);
+  const [selectedSectionIndex, setSelectedSectionIndex] = useState<number | null>(null);
+  const [aiInputText, setAiInputText] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
-    if (route.params?.initialCareerText) {
+    const loadContent = async () => {
+      try {
+        // 1. 먼저 임시저장된 데이터가 있는지 확인
+        const tempDataString = await AsyncStorage.getItem(`@temp_career_${userId}`);
+        if (tempDataString) {
+          const tempData = JSON.parse(tempDataString);
+          // 임시저장 데이터가 비어있는지 확인
+          const hasContent = tempData.sections.some((section: CareerSection) => section.text.trim().length > 0);
+          
+          if (!hasContent) {
+            // 임시저장 데이터가 비어으면 삭제하고 서버 데이터 로드
+            await AsyncStorage.removeItem(`@temp_career_${userId}`);
+            if (route.params?.initialCareerText) {
+              loadInitialContent();
+            }
+            return;
+          }
+
+          const tempTimestamp = new Date(tempData.timestamp);
+          const now = new Date();
+          const hoursDiff = (now.getTime() - tempTimestamp.getTime()) / (1000 * 60 * 60);
+
+          // 임시저장된 데이터가 24시간 이내인 경우
+          if (hoursDiff < 24) {
+            // 2. 임시저장 데이터가 있다면, 사용자에게 선택권 제공
+            Alert.alert(
+              '임시저장된 내용 발견',
+              '이전에 임시저장된 내용이 있습니다. 불러오시겠습니까?',
+              [
+                {
+                  text: '아니오',
+                  onPress: () => {
+                    // 기존 서버 데이터 사용
+                    if (route.params?.initialCareerText) {
+                      loadInitialContent();
+                    }
+                    // 임시저장 데이터 삭제
+                    AsyncStorage.removeItem(`@temp_career_${userId}`);
+                  },
+                  style: 'cancel'
+                },
+                {
+                  text: '예',
+                  onPress: () => {
+                    // 임시저장 데이터 사용
+                    setCareerSections(tempData.sections);
+                  }
+                }
+              ]
+            );
+            return;
+          }
+        }
+
+        // 3. 임시저장 데이터가 없거나 24시간이 지났다면 서버 데이터 사용
+        if (route.params?.initialCareerText) {
+          loadInitialContent();
+        }
+      } catch (error) {
+        console.error('데이터 로드 오류:', error);
+        if (route.params?.initialCareerText) {
+          loadInitialContent();
+        }
+      }
+    };
+
+    const loadInitialContent = () => {
       const sections = route.params.initialCareerText.split('\n\n');
       const updatedSections = [...careerSections];
       
@@ -49,7 +123,9 @@ const MyCareerEditView = () => {
       });
       
       setCareerSections(updatedSections);
-    }
+    };
+
+    loadContent();
   }, []);
 
   useEffect(() => {
@@ -114,7 +190,7 @@ const MyCareerEditView = () => {
 
     Alert.alert(
       "삭제 확인",
-      "정말로 모든 내용을 삭제하시겠습니까?",
+      "정말로 모든 내용을 제하시겠습니까?",
       [
         {
           text: "취소",
@@ -138,7 +214,7 @@ const MyCareerEditView = () => {
               }
             } catch (error) {
               console.error('API 오류:', error);
-              Alert.alert('오류', '자기소개서 삭제 중 오류가 발생했습니다.');
+              Alert.alert('오류', '자소개서 삭제 중 오류가 발생했습니다.');
             }
           }
         }
@@ -154,6 +230,92 @@ const MyCareerEditView = () => {
         text: newText
       };
       setCareerSections(updatedSections);
+      autoSaveTempData();
+    }
+  };
+
+  const handleTempSave = async () => {
+    try {
+      const tempData = {
+        sections: careerSections,
+        timestamp: new Date().toISOString()
+      };
+      
+      await AsyncStorage.setItem(`@temp_career_${userId}`, JSON.stringify(tempData));
+      
+      Alert.alert(
+        '임시저장 완료',
+        '작성하신 내용이 임시저장되었습니다.',
+        [
+          {
+            text: '확인',
+            onPress: () => navigation.goBack()
+          }
+        ]
+      );
+    } catch (error) {
+      console.error('임시저장 오류:', error);
+      Alert.alert('오류', '임시저장 중 문제가 발생했습니다.');
+    }
+  };
+
+  const autoSaveTempData = async () => {
+    try {
+      const tempData = {
+        sections: careerSections,
+        timestamp: new Date().toISOString()
+      };
+      await AsyncStorage.setItem(`@temp_career_${userId}`, JSON.stringify(tempData));
+    } catch (error) {
+      console.error('자동 임시저장 오류:', error);
+    }
+  };
+
+  useEffect(() => {
+    const autoSaveInterval = setInterval(autoSaveTempData, 60000);
+    return () => clearInterval(autoSaveInterval);
+  }, [careerSections]);
+
+  useEffect(() => {
+    const subscription = AppState.addEventListener('change', (nextAppState: AppStateStatus) => {
+      if (nextAppState === 'background' || nextAppState === 'inactive') {
+        autoSaveTempData();
+      }
+    });
+
+    return () => {
+      subscription.remove();
+    };
+  }, [careerSections]);
+
+  const handleAiHelp = (sectionIndex: number) => {
+    setSelectedSectionIndex(sectionIndex);
+    setIsAiModalVisible(true);
+  };
+
+  const handleAiSubmit = async () => {
+    if (selectedSectionIndex === null || !aiInputText.trim()) {
+      Alert.alert('입력 오류', '요청할 내용을 입력해주세요.');
+      return;
+    }
+
+    setIsLoading(true);
+    try {
+      const section = careerSections[selectedSectionIndex];
+      const response = await requestClaudeResponse(aiInputText, section.title);
+
+      if (response.success && response.data) {
+        updateSectionText(selectedSectionIndex, response.data);
+        setIsAiModalVisible(false);
+        setAiInputText('');
+      } else {
+        Alert.alert('오류', response.error || '요청 처리 중 오류가 발생했습니다.');
+      }
+    } catch (error) {
+      console.error('AI 요청 오류:', error);
+      Alert.alert('오류', 'AI 요청 처리 중 오류가 발생했습니다.');
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -164,12 +326,20 @@ const MyCareerEditView = () => {
           <Ionicons name="chevron-back" size={24} color="#000" />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>자기소개서</Text>
-        <View style={styles.placeholder} />
+        <TouchableOpacity 
+          style={styles.tempSaveButton} 
+          onPress={handleTempSave}
+        >
+          <Text style={styles.tempSaveText}>임시저장</Text>
+        </TouchableOpacity>
       </View>
       <ScrollView style={styles.content}>
         {careerSections.map((section, index) => (
           <View key={index} style={styles.sectionContainer}>
-            <Text style={styles.sectionTitle}>{section.title}</Text>
+            <View style={styles.sectionHeader}>
+              <Text style={styles.sectionTitle}>{section.title}</Text>
+              <Text style={styles.characterCount}>{section.text.length}/500자</Text>
+            </View>
             <TextInput
               style={styles.careerInput}
               multiline
@@ -178,7 +348,13 @@ const MyCareerEditView = () => {
               onChangeText={(text) => updateSectionText(index, text)}
               maxLength={500}
             />
-            <Text style={styles.characterCount}>{section.text.length}/500자</Text>
+            <TouchableOpacity 
+              style={styles.aiHelpButton}
+              onPress={() => handleAiHelp(index)}
+            >
+              <MaterialIcons name="add" size={16} color="#4a90e2" />
+              <Text style={styles.aiHelpText}>AI 도움받기</Text>
+            </TouchableOpacity>
           </View>
         ))}
       </ScrollView>
@@ -213,6 +389,18 @@ const MyCareerEditView = () => {
           </Text>
         </TouchableOpacity>
       </View>
+      {selectedSectionIndex !== null && (
+        <AiHelpModal
+          visible={isAiModalVisible}
+          onClose={() => setIsAiModalVisible(false)}
+          sectionTitle={careerSections[selectedSectionIndex].title}
+          inputText={aiInputText}
+          onInputChange={setAiInputText}
+          onSubmit={handleAiSubmit}
+          isLoading={isLoading}
+          currentSectionText={careerSections[selectedSectionIndex].text}
+        />
+      )}
     </SafeAreaView>
   );
 };
@@ -237,17 +425,35 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: 'bold',
   },
-  placeholder: {
-    width: 40,
+  tempSaveButton: {
+    padding: 8,
+  },
+  tempSaveText: {
+    fontSize: 14,
+    color: '#4a90e2',
+    fontWeight: '500',
   },
   content: {
     flex: 1,
     padding: 16,
   },
-  subtitle: {
-    fontSize: 14,
+  sectionContainer: {
+    marginBottom: 24,
+  },
+  sectionHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  sectionTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#333',
+  },
+  characterCount: {
+    fontSize: 12,
     color: '#666',
-    marginBottom: 16,
   },
   careerInput: {
     fontSize: 16,
@@ -258,12 +464,22 @@ const styles = StyleSheet.create({
     borderColor: '#e0e0e0',
     borderRadius: 8,
     padding: 12,
+    marginBottom: 8,
   },
-  characterCount: {
-    fontSize: 12,
-    color: '#666',
-    textAlign: 'right',
-    marginTop: 8,
+  aiHelpButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    alignSelf: 'flex-end',
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+    borderRadius: 4,
+    backgroundColor: '#f0f8ff',
+  },
+  aiHelpText: {
+    marginLeft: 4,
+    fontSize: 14,
+    color: '#4a90e2',
+    fontWeight: '500',
   },
   footer: {
     flexDirection: 'row',
@@ -280,12 +496,6 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: 'bold',
   },
-  saveButton: {
-    backgroundColor: '#4a90e2',
-  },
-  saveButtonText: {
-    color: '#fff',
-  },
   deleteButton: {
     backgroundColor: '#fff',
     borderWidth: 1,
@@ -294,24 +504,21 @@ const styles = StyleSheet.create({
   deleteButtonText: {
     color: '#ff3b30',
   },
+  saveButton: {
+    backgroundColor: '#4a90e2',
+  },
+  saveButtonText: {
+    color: '#fff',
+  },
+  fullWidthButton: {
+    flex: 2,
+  },
   disabledButton: {
     backgroundColor: '#f0f0f0',
     borderColor: '#d0d0d0',
   },
   disabledButtonText: {
     color: '#a0a0a0',
-  },
-  sectionContainer: {
-    marginBottom: 24,
-  },
-  sectionTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#333',
-    marginBottom: 8,
-  },
-  fullWidthButton: {
-    flex: 2,
   },
 });
 

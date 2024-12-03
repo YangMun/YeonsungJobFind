@@ -1,8 +1,8 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { View, Text, StyleSheet, SafeAreaView, TouchableOpacity, TextInput, ScrollView, Modal, Dimensions, Alert, Platform } from 'react-native';
+import { View, Text, StyleSheet, SafeAreaView, TouchableOpacity, TextInput, ScrollView, Modal, Dimensions, Alert } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation, useRoute } from '@react-navigation/native';
-import { formatDate, validateDate, validateGradInfo, GradInfoData, API_URL } from '../../../common/utils/validationUtils';
+import {validateDate, validateGradInfo, GradInfoData, API_URL } from '../../../common/utils/validationUtils';
 import axios from 'axios';
 import { useAuth } from '../../../context/AuthContext';
 
@@ -94,12 +94,12 @@ const GradInfo = () => {
   const handleDateChange = (text: string, setter: (value: string) => void) => {
     // 숫자만 추출
     const numbers = text.replace(/[^0-9]/g, '');
-    
+
     if (numbers.length <= 6) {
       if (numbers.length > 4) {
         const year = numbers.slice(0, 4);
         let month = numbers.slice(4);
-        
+
         // 월 처리 로직
         if (month.length === 1) {
           // 한 자리 숫자일 경우 그대로 표시

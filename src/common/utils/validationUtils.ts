@@ -17,6 +17,22 @@ interface SignUpResult {
   message: string;
 }
 
+// ProfileData 인터페이스 정의
+export interface ProfileData {
+  department_name: string;
+  phone_number: string;
+  email: string;
+}
+
+export interface Message {
+  id: string;
+  text?: string;
+  image?: any;
+  isUser: boolean;
+  buildingOptions?: boolean;
+  departments?: string[];
+}
+
 interface PostJobData {
   title: string;
   contents: string;
@@ -305,8 +321,12 @@ export const validateNormalInfo = (data: NormalInfoData): ValidationResult => {
 
   // 이메일 형식 확인
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  const allowedDomains = /\.(com|ru|net|kr|edu|cz|mil|gov|co)$/;
   if (!emailRegex.test(data.email)) {
     return { isValid: false, message: '올바른 이메일 형식이 아닙니다.' };
+  }
+  if(!allowedDomains.test(data.email)){
+    return { isValid: false, message: '허용되지 않은 이메일 도메인입니다.' };
   }
 
   // 휴대폰 번호 형 확인
@@ -344,7 +364,7 @@ export const validateDate = (date: string): boolean => {
   const monthNum = parseInt(month);
 
   const currentYear = new Date().getFullYear();
-  
+
   return yearNum >= 1900 && 
          yearNum <= currentYear + 10 && 
          monthNum >= 1 && 
@@ -371,7 +391,7 @@ export const validateGradInfo = (data: GradInfoData): ValidationResult => {
   // 재학기간 형식 검사
   const dateRegex = /^\d{4}\.(0[1-9]|1[0-2])$/;
   if (!dateRegex.test(data.admissionDate) || !dateRegex.test(data.graduationDate)) {
-    return { isValid: false, message: '재학기간은 YYYY.MM 형식으로 입력해주세요.' };
+    return { isValid: false, message: '재학기간은 YYYY.MM 형식로 입력해주세요.' };
   }
 
   // 졸업여부 유효성 사
@@ -452,7 +472,7 @@ export const validateExperienceActivity = (data: ExperienceActivityData): Valida
     return { isValid: false, message: '날짜는 YYYY-MM 형식으로 입력해주세요.' };
   }
 
-  // 활동내용 길이 검사
+  // 활동내용 길 검사
   if (data.description.length > 500) {
     return { isValid: false, message: '활동내용은 500자를 초과할 수 없습니다.' };
   }
@@ -470,7 +490,21 @@ export const formatExperienceDate = (input: string): string => {
   
   // YYYY-MM 형식으로 변환
   const year = numericValue.slice(0, 4);
-  const month = numericValue.slice(4, 6).padEnd(2, '0');
+  let month = numericValue.slice(4, 6);
+  
+  // 월 숫자로 변환
+  let monthNum = parseInt(month);
+  
+  // 월이 0이거나 12를 초과하는 경우 처리
+  if (monthNum === 0 || monthNum > 12) {
+    // 마지 숫자를 사용하여 1~12 사이의 값으로 변환
+    monthNum = parseInt(month.slice(-1));
+    // 만약 마지막 숫자가 0이면 1로 설정
+    if (monthNum === 0) monthNum = 1;
+  }
+  
+  // 월을 2자리 문자열로 변환 (1 -> "01")
+  month = monthNum.toString().padStart(2, '0');
   
   return `${year}-${month}`;
 };
@@ -549,7 +583,7 @@ export const validateCareerSections = (sections: CareerSectionData[]): Validatio
     };
   }
 
-  // 각 섹션의 글자 수 확인
+  // 각 섹션의 글자 수 인
   const invalidSection = sections.find(section => section.text.length > 500);
   if (invalidSection) {
     return { 
@@ -599,3 +633,80 @@ export const maskEmail = (email: string): string => {
   const maskedUsername = username.slice(0, 3) + '*'.repeat(username.length - 3);
   return `${maskedUsername}@${domain}`;
 };
+
+//채용공고 상태 인터페이스 추가
+export interface JobPostStatus {
+  id: number;
+  job_id: number;
+  jobSeeker_id: string;
+  application_status: string;
+  applied_at: string;
+  updated_at: string;
+  qualification_type: string;
+}
+
+//채용공고 그룹화된 데이터 타입 정의
+export interface GroupedJobPost {
+  jobTitle: string;
+  jobId: number;
+  applicants: (JobPostStatus & {
+    applicantName?: string;
+    qualification_type?: string;
+  })[];
+}
+
+
+// 기존 JobPostStatus 인터페이스를 확장
+export interface NotificationItem extends JobPostStatus {
+  title: string;          // PostJob 테이블의 title
+  company_name: string;   // PostJob 테이블의 company_name
+  location: string;
+}
+
+//채용공고 지원자 정보 인터페이스 추가
+export interface JobPostDetail {
+  id: number;
+  jobSeeker_id: string;    
+  job_id: number;         
+  application_status: '지원 완료/검토중' | '합격' | '불합격' | '면접 요망';
+  jobPost: {
+    title: string;
+    company_name: string;
+  };
+  applicant: {
+    name: string;
+    email: string;
+    phone: string;
+    birthDate: string;
+    education: {
+      university_type: string;
+      school_name: string;
+      major: string;
+      graduation_status: string;
+    };
+    careerStatement: {
+      growth_process: string;
+      personality: string;
+      motivation: string;
+      aspiration: string;
+      career_history: string;
+    };
+  };
+}
+
+// 구인자 정보 인터페이스
+export interface EmployerInfo {
+  id: string;
+  department_name: string;
+  phone_number: string;
+  email: string;
+}
+
+// 구직자 정보 인터페이스
+export interface JobSeekerInfo {
+  id: string;
+  email: string;
+}
+
+// 사용자 타입 필터 옵션
+export type UserFilterType = 'all' | 'employer' | 'jobSeeker';

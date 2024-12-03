@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { View, Text, StyleSheet, SafeAreaView, TouchableOpacity, TextInput, Image, ScrollView, Modal, TouchableWithoutFeedback, Alert, Platform } from 'react-native';
+import { View, Text, StyleSheet, SafeAreaView, TouchableOpacity, Image, ScrollView, Platform } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation, useFocusEffect, useRoute } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -354,16 +354,19 @@ const ProfileEditView = () => {
                 { title: '지원동기' },
                 { title: '입사 후 포부' },
                 { title: '경력사항' }
-              ].map((item, index) => (
-                <View key={index} style={styles.careerItemBox}>
-                  <View style={styles.careerItemHeader}>
-                    <Text style={styles.careerItemTitle}>{item.title}</Text>
+              ].map((item, index) => {
+                const sections = careerStatement.split('\n\n');
+                const sectionContent = sections[index]?.split('\n')[1] || '';
+                
+                return sectionContent ? (
+                  <View key={index} style={styles.careerItemBox}>
+                    <View style={styles.careerItemHeader}>
+                      <Text style={styles.careerItemTitle}>{item.title}</Text>
+                    </View>
+                    <Text style={styles.careerItemText}>{sectionContent}</Text>
                   </View>
-                  <Text style={styles.careerItemText}>
-                    {careerStatement.split('\n\n')[index].split('\n')[1]}
-                  </Text>
-                </View>
-              ))}
+                ) : null;
+              })}
             </View>
           ) : (
             <Text style={styles.careerSubtitle}>커리어 소개와 핵심역량을 입력해보세요</Text>

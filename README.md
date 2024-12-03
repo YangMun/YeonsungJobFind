@@ -9,6 +9,10 @@ YEONSUNG_JOBFIND는 연성대학교 학생들을 위한 구직 플랫폼 앱입�
 - Backend: express.js
 - Database: Mariadb
 
+## Flow Chart
+<img width="1713" alt="FlowChart" src="https://github.com/user-attachments/assets/a1e0ab1f-9782-43f2-9def-b76d3e0a1d48">
+
+
 ## 프로젝트 구조
 
 ```
@@ -65,7 +69,10 @@ YEONSUNG_JOBFIND
 │   │   └── utils: 구직자 관련 유틸리티 함수
 │   ├── manager
 │   │   ├── components: 관리자 관련 컴포넌트 (향후 구현 예정)
-│   │   ├── screens: 관리자 화면 (향후 구현 예정)
+│   │   ├── screens
+│   │   │   ├── ManagerMain.tsx : 매니저 메인 화면
+│   │   │   ├── PostManagementScreen.tsx : 회원 관리 화면 
+│   │   │   └── UserManagementScreen.tsx : 게시글 관리 화면
 │   │   └── utils: 관리자 관련 유틸리티 (향후 구현 예정)
 │   ├── navigation
 │   │   └── AppNavigator.tsx: 앱 전체 네비게이션 구조 정의
@@ -75,6 +82,7 @@ YEONSUNG_JOBFIND
 ├── app.json: Expo 설정 파일
 ├── App.tsx: 앱의 진입점, 전체 구조 정의
 ├── babel.config.js: Babel 설정 파일
+├── DBText.txt
 ├── package-lock.json: 프로젝트 의존성 버전 고정 파일
 ├── package.json: 프로젝트 설정 및 의존성 정의
 └── tsconfig.json: TypeScript 설정 파일
@@ -129,3 +137,6 @@ YEONSUNG_JOBFIND
 - react-native-gesture-handler: 터치 및 제스처 핸들링
 - react-native-safe-area-context: 안전 영역 관리
 - @expo/vector-icons: 아이콘 사용
+
+5. 요구사항 정의서
+- https://docs.google.com/spreadsheets/d/1T9phCBWEQ1-OnmJrxJjEEn7jb5KPngKXyDzuel_pFP0/edit?usp=sharing

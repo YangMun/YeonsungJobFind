@@ -1,16 +1,5 @@
 import React, { useState } from 'react';
-import { 
-View, 
-  Text, 
-  StyleSheet, 
-  SafeAreaView, 
-  TouchableOpacity, 
-  TextInput, 
-  ScrollView,
-  Alert,
-  Platform,
-  Modal
-} from 'react-native';
+import { View, Text, StyleSheet, SafeAreaView, TouchableOpacity, TextInput, ScrollView, Alert } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -49,15 +38,6 @@ const CertificationForm = () => {
     certification?: Certification;
   };
   const { userId } = useAuth();
-
-  // formatDate 함수를 useState 선언 전에 정의
-  const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
-    const year = date.getFullYear();
-    const month = String(date.getMonth() + 1).padStart(2, '0');
-    const day = String(date.getDate()).padStart(2, '0');
-    return `${year}-${month}-${day}`;
-  };
 
   // 초기값 설정
   const [certificationName, setCertificationName] = useState(

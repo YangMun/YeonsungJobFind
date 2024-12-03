@@ -1,13 +1,11 @@
 import React, { useState, useCallback, useEffect } from 'react';
-import { View, StyleSheet, FlatList, TouchableOpacity, Text, SafeAreaView, RefreshControl, Modal, TouchableWithoutFeedback, Platform } from 'react-native';
+import { View, StyleSheet, FlatList, TouchableOpacity, Text, SafeAreaView, RefreshControl, Modal, TouchableWithoutFeedback } from 'react-native';
 import axios from 'axios';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { RootStackParamList } from '../../navigation/AppNavigator';
 import { Ionicons } from '@expo/vector-icons';
 import { API_URL, Job } from '../../common/utils/validationUtils';
-
-
 
 type HomeScreenNavigationProp = StackNavigationProp<RootStackParamList, 'JobSeekerMain'>;
 
@@ -119,6 +117,14 @@ const HomeScreen: React.FC = () => {
     setShowFilter(false);
   };
 
+  const renderEmptyComponent = () => (
+    <View style={styles.emptyContainer}>
+      <Text style={styles.emptyText}>
+        {activeTab === 'active' ? '진행중인 공고가 없습니다' : '마감된 공고가 없습니다'}
+      </Text>
+    </View>
+  );
+
   return (
     <SafeAreaView style={styles.safeArea}>
       <View style={styles.container}>
@@ -175,6 +181,7 @@ const HomeScreen: React.FC = () => {
           refreshControl={
             <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
           }
+          ListEmptyComponent={renderEmptyComponent}
         />
       </View>
     </SafeAreaView>
@@ -333,6 +340,17 @@ const styles = StyleSheet.create({
       backgroundColor: 'rgba(0, 0, 0, 0.5)',
       justifyContent: 'center',
       alignItems: 'center',
+    },
+    emptyContainer: {
+      flex: 1,
+      justifyContent: 'center',
+      alignItems: 'center',
+      paddingTop: 100,
+    },
+    emptyText: {
+      fontSize: 16,
+      color: '#6c757d',
+      textAlign: 'center',
     },
 });
 

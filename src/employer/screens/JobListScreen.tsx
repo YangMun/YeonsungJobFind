@@ -8,32 +8,23 @@
 import React, { useState, useCallback } from 'react';
 import { View, StyleSheet, FlatList, TouchableOpacity, Text, SafeAreaView, RefreshControl, Platform } from 'react-native';
 import axios from 'axios';
-import { useAuth } from '../../context/AuthContext'; // AuthContext import 추가
+import { useAuth } from '../../context/AuthContext';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { RootStackParamList } from '../../navigation/AppNavigator';
-import { API_URL } from '../../common/utils/validationUtils';
-
-interface Job {
-  id: number;
-  title: string;
-  company_name: string;
-  contents: string;
-  recruitment_deadline: string;
-  location: string;
-}
+import { API_URL, Job } from '../../common/utils/validationUtils';
 
 type JobListScreenNavigationProp = StackNavigationProp<RootStackParamList, 'EmployerMain'>;
 
 const JobListScreen: React.FC = () => {
   const [jobs, setJobs] = useState<Job[]>([]);
-  const { userId } = useAuth(); // AuthContext에서 userId 가져오기
+  const { userId } = useAuth();
   const [activeTab, setActiveTab] = useState<'active' | 'closed'>('active');
   const [refreshing, setRefreshing] = useState(false);
   const navigation = useNavigation<JobListScreenNavigationProp>();
 
   const fetchJobs = useCallback(async () => {
-    if (!userId) return; // userId가 없으면 함수 종료
+    if (!userId) return;
     try {
       const response = await axios.get(`${API_URL}/api/job-list/${userId}?status=${activeTab}`);
       if (response.data.success) {
@@ -41,6 +32,7 @@ const JobListScreen: React.FC = () => {
       }
     } catch (error) {
       console.error('API 요청 오류:', error);
+      setJobs([]);
     }
   }, [userId, activeTab]);
 
@@ -58,17 +50,34 @@ const JobListScreen: React.FC = () => {
 
   const handleTabPress = (tab: 'active' | 'closed') => {
     setActiveTab(tab);
-    fetchJobs(); // 탭을 누를 때마다 데이터를 새로 불러옵니다.
+    fetchJobs();
   };
 
   const formatDate = (dateString: string) => {
+    if (!dateString) return '';
+    if (/^\d{4}-\d{2}-\d{2}$/.test(dateString)) {
+      return dateString;
+    }
     const date = new Date(dateString);
-    return date.toISOString().split('T')[0];
+    const utc = date.getTime() + (date.getTimezoneOffset() * 60000);
+    const localDate = new Date(utc + (9 * 60 * 60 * 1000));
+    return localDate.toISOString().split('T')[0];
   };
 
   const truncateContent = (content: string, maxLength: number) => {
     return content.length > maxLength ? content.substring(0, maxLength) + '...' : content;
   };
+
+  const EmptyComponent = () => (
+    <View style={styles.emptyContainer}>
+      <View style={styles.emptyIcon}>
+        <View style={styles.emptyIconCorner} />
+      </View>
+      <Text style={styles.emptyText}>
+        {activeTab === 'active' ? '아직 등록한 공고가 없습니다' : '마감된 공고가 없습니다'}
+      </Text>
+    </View>
+  );
 
   const renderJobItem = ({ item }: { item: Job }) => (
     <TouchableOpacity 
@@ -111,10 +120,14 @@ const JobListScreen: React.FC = () => {
           data={jobs}
           renderItem={renderJobItem}
           keyExtractor={(item) => item.id.toString()}
-          contentContainerStyle={styles.listContainer}
+          contentContainerStyle={[
+            styles.listContainer,
+            jobs.length === 0 && styles.emptyListContainer
+          ]}
           refreshControl={
             <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
           }
+          ListEmptyComponent={EmptyComponent}
         />
       </View>
     </SafeAreaView>
@@ -125,6 +138,7 @@ const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
     backgroundColor: '#f8f9fa',
+    paddingTop: Platform.OS === 'android' ? 25 : 0,
   },
   container: {
     flex: 1,
@@ -134,7 +148,7 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-start',
     paddingHorizontal: 16,
     paddingVertical: 12,
-    backgroundColor: '#f8f9fa', // 전체 배경색과 동일하게 변경
+    backgroundColor: '#f8f9fa',
     borderBottomWidth: 1,
     borderBottomColor: '#e0e3e8',
   },
@@ -160,7 +174,7 @@ const styles = StyleSheet.create({
     padding: 16,
   },
   jobItem: {
-    flexDirection: 'row', // 변경: 가로 방향으로 내용 배치
+    flexDirection: 'row',
     backgroundColor: '#ffffff',
     borderRadius: 12,
     padding: 16,
@@ -213,6 +227,37 @@ const styles = StyleSheet.create({
   arrow: {
     fontSize: 20,
     color: '#adb5bd',
+  },
+  emptyContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingVertical: 50,
+  },
+  emptyIcon: {
+    width: 60,
+    height: 70,
+    backgroundColor: '#CED4DA',
+    borderRadius: 4,
+    marginBottom: 16,
+    position: 'relative',
+  },
+  emptyIconCorner: {
+    position: 'absolute',
+    right: 0,
+    top: 0,
+    width: 15,
+    height: 15,
+    backgroundColor: '#f8f9fa',  // 배경색과 동일
+    transform: [{ rotate: '45deg' }],
+  },
+  emptyText: {
+    fontSize: 16,
+    color: '#6c757d',
+    textAlign: 'center',
+  },
+  emptyListContainer: {
+    flexGrow: 1,
   },
 });
 

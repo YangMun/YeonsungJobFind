@@ -266,9 +266,25 @@ app.delete('/api/delete-job/:jobId', async (req, res) => {
   const { jobId } = req.params;
   
   try {
+    // 트랜잭션 시작
+    await pool.query('START TRANSACTION');
+
+    // 1. JobPost_Status 테이블에서 관련 데이터 삭제
+    await pool.query('DELETE FROM JobPost_Status WHERE job_id = ?', [jobId]);
+
+    // 2. postjob_apply 테이블에서 관련 데이터 삭제
+    await pool.query('DELETE FROM postjob_apply WHERE job_id = ?', [jobId]);
+
+    // 3. PostJob 테이블에서 공고 삭제
     await pool.query('DELETE FROM PostJob WHERE id = ?', [jobId]);
-    res.json({ success: true, message: '구인 공고가 성공 제되었다.' });
+
+    // 트랜잭션 커밋
+    await pool.query('COMMIT');
+
+    res.json({ success: true, message: '구인 공고가 성공적으로 삭제되었습니다.' });
   } catch (error) {
+    // 오류 발생 시 롤백
+    await pool.query('ROLLBACK');
     console.error('데이터베이스 오류:', error);
     res.status(500).json({ success: false, message: '서버 오류가 발생했습니다.' });
   }
@@ -283,7 +299,7 @@ app.get('/api/employer-profile/:id', async (req, res) => {
     if (rows.length > 0) {
       res.json({ success: true, profile: rows[0] });
     } else {
-      res.status(404).json({ success: false, message: '해당 구인자를 찾을 수 없습니다.' });
+      res.status(404).json({ success: false, message: '해당 구인자를 찾을 수 없니다.' });
     }
   } catch (error) {
     console.error('데이터베이스 오류:', error);
@@ -381,7 +397,7 @@ app.get('/api/departments', async (req, res) => {
     const departments = rows.map(row => row.department_name);
     res.json({ success: true, departments });
   } catch (error) {
-    console.error('데이터베이스 오류:', error);
+    console.error('데이터베이 오류:', error);
     res.status(500).json({ success: false, message: '서버 오류가 발생했습니다.' });
   }
 });
@@ -403,7 +419,7 @@ app.get('/api/get-normal-info/:jobSeekerId', async (req, res) => {
   }
 });
 
-// 구직자 기본 정보 저장/수정 API (이미지 업로드 포함)
+// 구직자 기 정보 저장/수정 API (이미지 업로드 포함)
 app.post('/api/save-normal-info', upload.single('image'), async (req, res) => {
   const { jobSeekerId, name, birthDate, email, phone, gender } = req.body;
   const image = req.file ? req.file.filename : null;
@@ -503,7 +519,7 @@ app.post('/api/save-grad-info', async (req, res) => {
   }
 });
 
-// 구직자 학력 정보 조회 API
+// 구직자 학력 정 조회 API
 app.get('/api/get-education-info/:jobSeekerId', async (req, res) => {
   const { jobSeekerId } = req.params;
   
@@ -543,7 +559,7 @@ app.post('/api/save-experience-activity', async (req, res) => {
   }
 
   // 활동구분 유효성 검사
-  const activityTypes = ['교내활동', '인', '자원봉사', '동아리', '아르바이트', '사회활동', '수행과제', '해외연수'];
+  const activityTypes = ['교내활동', '인턴', '자원봉사', '동아리', '아르바이트', '사회활동', '수행과제', '해외연수'];
   if (!activityTypes.includes(activityType)) {
     return res.status(400).json({ success: false, message: '올바른 활동구분을 선택해주세요.' });
   }
@@ -675,7 +691,7 @@ app.get('/api/get-experience-activities/:jobSeekerId', async (req, res) => {
         activities: activities 
       });
     } else {
-      res.json({ success: false, message: '경험/활동/교육 정보가 없습니다.' });
+      res.json({ success: false, message: '경험/활동/교육 정가 없습니다.' });
     }
   } catch (error) {
     console.error('데이터베이스 오류:', error);
@@ -684,19 +700,19 @@ app.get('/api/get-experience-activities/:jobSeekerId', async (req, res) => {
 });
 
 // 경험/활동/교육 정보 삭제 API
-app.delete('/api/delete-experience-activity/:id/:jobSeekerId', async (req, res) => {
-  const { id, jobSeekerId } = req.params;
+app.delete('/api/delete-experience-activity/:activityId/:jobSeekerId', async (req, res) => {
+  const { activityId, jobSeekerId } = req.params;
   
   try {
     const [result] = await pool.query(
       'DELETE FROM ExperienceActivity WHERE id = ? AND jobSeeker_id = ?', 
-      [id, jobSeekerId]
+      [activityId, jobSeekerId]
     );
     
     if (result.affectedRows === 0) {
       return res.status(404).json({ 
         success: false, 
-        message: '해당 활동을 찾을 수 없습니다.' 
+        message: '해당 활동을 찾을 수 없거나 삭제 권한이 없습니다.' 
       });
     }
 
@@ -798,7 +814,7 @@ app.post('/api/update-certification', async (req, res) => {
     return res.status(400).json({ success: false, message: '모든 필드를 입력해주세요.' });
   }
 
-  // 길이 제한 검사
+  // 길이 한 검사
   if (certificationName.length > 50) {
     return res.status(400).json({ success: false, message: '자격증명은 50자를 초과할 수 없습니다.' });
   }
@@ -839,7 +855,7 @@ app.post('/api/update-certification', async (req, res) => {
 
     res.json({ 
       success: true, 
-      message: '자격증 정보가 성공적으로 수정되었습니다.' 
+      message: '자격증 정보가 성공으로 수정되었습니다.' 
     });
   } catch (error) {
     console.error('데이터베이스 오류:', error);
@@ -1043,5 +1059,231 @@ app.post('/api/job-status-insert', async (req, res) => {
     res.status(500).json({ success: false });
   }
 });
+
+
+// 고용주별 지원자 목록 조회 API
+app.get('/api/employer/applications/:employerId', async (req, res) => {
+  const { employerId } = req.params;
+  
+  try {
+    const query = `
+      SELECT js.*, pj.title
+      FROM JobPost_Status js
+      JOIN PostJob pj ON js.job_id = pj.id
+      WHERE pj.employer_id = ?
+      ORDER BY js.applied_at DESC
+    `;
+    
+    const [applications] = await pool.query(query, [employerId]);
+    res.json({ success: true, applications });
+  } catch (error) {
+    console.error('데이터베이스 오류:', error);
+    res.status(500).json({ success: false, message: '서버 오류가 발생했습니다.' });
+  }
+});
+
+// 지원자 상세 정보 조회 API
+app.get('/api/employer/applicant-detail/:jobSeekerId/:jobId', async (req, res) => {
+  const { jobSeekerId, jobId } = req.params;
+  
+  try {
+    // JobPost_Status에서 해당 지원 정보의 id와 상태 조회
+    const [applicationStatus] = await pool.query(
+      'SELECT * FROM JobPost_Status WHERE jobSeeker_id = ? AND job_id = ?',
+      [jobSeekerId, jobId]
+    );
+
+    // 공고 정보 조회
+    const [jobPost] = await pool.query(
+      'SELECT title, company_name FROM PostJob WHERE id = ?',
+      [jobId]
+    );
+
+    // 지원자 기본 정보 조회
+    const [normalInfo] = await pool.query(
+      'SELECT name, email, phone, birthDate FROM NormalInformation WHERE jobSeeker_id = ?',
+      [jobSeekerId]
+    );
+
+    // 학력 정보 조회
+    const [education] = await pool.query(
+      'SELECT university_type, school_name, major, graduation_status FROM GradeInformation WHERE jobSeeker_id = ?',
+      [jobSeekerId]
+    );
+
+    // 자기소개서 조회
+    const [careerStatement] = await pool.query(
+      'SELECT growth_process, personality, motivation, aspiration, career_history FROM career_statements WHERE jobSeeker_id = ?',
+      [jobSeekerId]
+    );
+
+    // 모든 정보를 하나의 객체로 조합
+    const detail = {
+      id: applicationStatus[0]?.id,
+      jobSeeker_id: applicationStatus[0]?.jobSeeker_id,
+      job_id: applicationStatus[0]?.job_id,
+      application_status: applicationStatus[0]?.application_status,
+      jobPost: jobPost[0] || { title: '정보 없음', company_name: '정보 없음' },
+      applicant: {
+        ...normalInfo[0] || { name: '정보 없음', email: '정보 없음', phone: '정보 없음', birthDate: '정보 없음' },
+        education: education[0] || {
+          university_type: '정보 없음',
+          school_name: '정보 없음',
+          major: '정보 없음',
+          graduation_status: '정보 없음'
+        },
+        careerStatement: careerStatement[0] || {
+          growth_process: '정보 없음',
+          personality: '정보 없음',
+          motivation: '정보 없음',
+          aspiration: '정보 없음',
+          career_history: '정보 없음'
+        }
+      }
+    };
+
+    res.json({ success: true, detail });
+  } catch (error) {
+    console.error('데이터베이스 오류:', error);
+    res.status(500).json({ success: false, message: '서버 오류가 발생했습니다.' });
+  }
+});
+
+
+// 지원 상태 업데이트 API
+app.put('/api/employer/update-status/:applicationId', async (req, res) => {
+  const { applicationId } = req.params;
+  const { status } = req.body;
+  
+  try {
+    // 상태 유효성 검사 추가
+    const validStatuses = ['합격', '불합격', '면접 요망'];
+    if (!validStatuses.includes(status)) {
+      return res.status(400).json({ 
+        success: false, 
+        message: '유효하지 않은 상태값입니다.' 
+      });
+    }
+
+    await pool.query(
+      'UPDATE JobPost_Status SET application_status = ? WHERE id = ?',
+      [status, applicationId]
+    );
+
+    res.json({
+      success: true,
+      message: `지원자 상태가 "${status}"(으)로 업데이트되었습니다.`
+    });
+  } catch (error) {
+    console.error('서버 에러:', error);
+    res.status(500).json({
+      success: false,
+      message: '상태 업데이트 실패',
+      error: error.message
+    });
+  }
+});
+
+// 구직자별 지원 현황 조회 API
+app.get('/api/jobseeker/applications/:jobSeekerId', async (req, res) => {
+  const { jobSeekerId } = req.params;
+  
+  try {
+    const query = `
+      SELECT 
+        js.*,
+        pj.title,
+        pj.company_name,
+        pj.location,
+        pj.qualification_type
+      FROM JobPost_Status js
+      JOIN PostJob pj ON js.job_id = pj.id
+      WHERE js.jobSeeker_id = ?
+      ORDER BY js.applied_at DESC
+    `;
+    
+    const [applications] = await pool.query(query, [jobSeekerId]);
+    res.json({ success: true, applications });
+  } catch (error) {
+    console.error('데이터베이스 오류:', error);
+    res.status(500).json({ success: false, message: '서버 오류가 발생했습니다.' });
+  }
+});
+
+// 구인 공고 전체 조회 API
+app.get('/api/postManagement/getAllPostJob', async (req, res) => {
+  
+  try {
+    const query = 'SELECT id, title, contents, company_name FROM PostJob';
+    
+    const [applications] = await pool.query(query);
+    res.json({ success: true, applications });
+  } catch (error) {
+    console.error('데이터베이스 오류:', error);
+    res.status(500).json({ success: false, message: '서버 오류가 발생했습니다.' });
+  }
+});
+
+// 전체 사용자 목록 조회 API
+app.get('/api/users', async (req, res) => {
+  const { type } = req.query;
+  
+  try {
+    let employers = [];
+    let jobSeekers = [];
+
+    // type에 따라 필요한 데이터만 조회
+    if (type === 'all' || type === 'employer') {
+      const [employerRows] = await pool.query('SELECT id, department_name, phone_number, email FROM employer');
+      employers = employerRows;
+    }
+
+    if (type === 'all' || type === 'jobSeeker') {
+      const [jobSeekerRows] = await pool.query('SELECT id, email FROM jobSeeker');
+      jobSeekers = jobSeekerRows;
+    }
+
+    res.json({ 
+      success: true, 
+      users: {
+        employers,
+        jobSeekers
+      }
+    });
+  } catch (error) {
+    console.error('데이터베이스 오류:', error);
+    res.status(500).json({ success: false, message: '서버 오류가 발생했습니다.' });
+  }
+});
+
+// 사용자 삭제 API
+app.delete('/api/users/:type/:id', async (req, res) => {
+  const { type, id } = req.params;
+  
+  try {
+    await pool.query('START TRANSACTION');
+    
+    if (type === 'employer') {
+      await pool.query('DELETE FROM JobPost_Status WHERE job_id IN (SELECT id FROM PostJob WHERE employer_id = ?)', [id]);
+      await pool.query('DELETE FROM PostJob WHERE employer_id = ?', [id]);
+      await pool.query('DELETE FROM employer WHERE id = ?', [id]);
+    } else if (type === 'jobSeeker') {
+      await pool.query('DELETE FROM JobPost_Status WHERE jobSeeker_id = ?', [id]);
+      await pool.query('DELETE FROM career_statements WHERE jobSeeker_id = ?', [id]);
+      await pool.query('DELETE FROM certifications WHERE jobSeeker_id = ?', [id]);
+      await pool.query('DELETE FROM ExperienceActivity WHERE jobSeeker_id = ?', [id]);
+      await pool.query('DELETE FROM GradeInformation WHERE jobSeeker_id = ?', [id]);
+      await pool.query('DELETE FROM jobSeeker WHERE id = ?', [id]);
+    }
+
+    await pool.query('COMMIT');
+    res.json({ success: true, message: '사용자가 성공적으로 삭제되었습니다.' });
+  } catch (error) {
+    await pool.query('ROLLBACK');
+    console.error('데이터베이스 오류:', error);
+    res.status(500).json({ success: false, message: '서버 오류가 발생했습니다.' });
+  }
+});
+
 const PORT = 3000;
 app.listen(PORT, () => console.log(`서버가 http://localhost:${PORT} 에서 실행 중입니다.`));
