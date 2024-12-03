@@ -321,8 +321,12 @@ export const validateNormalInfo = (data: NormalInfoData): ValidationResult => {
 
   // 이메일 형식 확인
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  const allowedDomains = /\.(com|ru|net|kr|edu|cz|mil|gov|co)$/;
   if (!emailRegex.test(data.email)) {
     return { isValid: false, message: '올바른 이메일 형식이 아닙니다.' };
+  }
+  if(!allowedDomains.test(data.email)){
+    return { isValid: false, message: '허용되지 않은 이메일 도메인입니다.' };
   }
 
   // 휴대폰 번호 형 확인
