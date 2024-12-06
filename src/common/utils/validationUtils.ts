@@ -315,8 +315,21 @@ export const validateNormalInfo = (data: NormalInfoData): ValidationResult => {
 
   // 생년월일 형식 확인 (YYYYMMDD)
   const birthDateRegex = /^\d{8}$/;
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
   if (!birthDateRegex.test(data.birthDate)) {
     return { isValid: false, message: '생년월일은 YYYYMMDD 형식으로 입력해주세요.' };
+  }
+  // 입력된 생년월일을 Date 객체로 변환
+  const birthDate = new Date(
+    parseInt(data.birthDate.substring(0, 4)),   // 연도 (숫자로 변환)
+    parseInt(data.birthDate.substring(4, 6)) - 1, // 월 (0부터 시작, 숫자로 변환)
+    parseInt(data.birthDate.substring(6, 8))    // 일 (숫자로 변환)
+  );
+
+  // 현재 날짜 이후인지 확인
+  if (birthDate > today) {
+    return { isValid: false, message: '생년월일은 오늘 이후 날짜일 수 없습니다.' };
   }
 
   // 이메일 형식 확인

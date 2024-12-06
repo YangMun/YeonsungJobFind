@@ -6,6 +6,9 @@ import { pickImage } from '../../../common/utils/imagePickerUtils';
 import { validateNormalInfo, API_URL } from '../../../common/utils/validationUtils';
 import axios from 'axios';
 import { useAuth } from '../../../context/AuthContext';
+import { Picker } from '@react-native-picker/picker'; // Picker 컴포넌트 추가 설치 필요
+
+const emailDomains = ['gmail.com', 'naver.com', 'daum.net', 'yahoo.com'];
 
 const NormalInfo = () => {
   const navigation = useNavigation();
@@ -13,9 +16,15 @@ const NormalInfo = () => {
   const [name, setName] = useState('');
   const [birthDate, setBirthDate] = useState('');
   const [email, setEmail] = useState('');
+  const [emailLocal, setEmailLocal] = useState('');
+  const [emailDomain, setEmailDomain] = useState(emailDomains[0]);
   const [phone, setPhone] = useState('');
   const [gender, setGender] = useState('');
   const [profileImage, setProfileImage] = useState<string | null>(null);
+
+  useEffect(() => {
+    setEmail(`${emailLocal}@${emailDomain}`);
+  }, [emailLocal, emailDomain]);
 
   useEffect(() => {
     if (userId) {
@@ -160,13 +169,24 @@ const NormalInfo = () => {
 
         <View style={styles.inputContainer}>
           <Text style={styles.label}>이메일 (필수)</Text>
-          <TextInput
-            style={styles.input}
-            placeholder="이메일을 입력하세요"
-            value={email}
-            onChangeText={setEmail}
-            keyboardType="email-address"
-          />
+          <View style={styles.emailInputContainer}>
+            <TextInput
+              style={[styles.input, styles.emailLocalInput]}
+              placeholder="이메일 ID"
+              value={emailLocal}
+              onChangeText={setEmailLocal}
+            />
+            <Text style={styles.atSymbol}>@</Text>
+            <Picker
+              selectedValue={emailDomain}
+              onValueChange={(itemValue) => setEmailDomain(itemValue)}
+              style={styles.picker}
+            >
+              {emailDomains.map((domain, index) => (
+                <Picker.Item key={index} label={domain} value={domain} />
+              ))}
+            </Picker>
+          </View>
         </View>
 
         <View style={styles.inputContainer}>
@@ -335,6 +355,27 @@ const styles = StyleSheet.create({
   saveButtonText: {
     fontSize: 16,
     color: '#fff',
+  },
+  emailInputContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#e0e0e0',
+    borderRadius: 4,
+    paddingHorizontal: 8,
+  },
+  emailLocalInput: {
+    flex: 1,
+    fontSize: 16,
+    paddingVertical: 8,
+  },
+  atSymbol: {
+    fontSize: 16,
+    marginHorizontal: 4,
+  },
+  picker: {
+    flex: 1,
+    fontSize: 16,
   },
 });
 
