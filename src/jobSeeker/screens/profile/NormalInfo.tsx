@@ -183,7 +183,7 @@ const NormalInfo = () => {
               <TextInput
                 style={styles.emailLocalInput}
                 placeholder="이메일 ID"
-                value={emailLocal}
+                value={email.split('@')[0]}
                 onChangeText={setEmailLocal}
               />
               <Text style={styles.atSymbol}>@</Text>
