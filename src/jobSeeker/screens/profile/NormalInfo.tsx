@@ -1,12 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, SafeAreaView, TouchableOpacity, TextInput, Image, ScrollView, Alert, Platform } from 'react-native';
+import { View, Text, StyleSheet, SafeAreaView, TouchableOpacity, TextInput, Image, ScrollView, Alert, Platform, Modal } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import { pickImage } from '../../../common/utils/imagePickerUtils';
 import { validateNormalInfo, API_URL } from '../../../common/utils/validationUtils';
 import axios from 'axios';
 import { useAuth } from '../../../context/AuthContext';
-import { Picker } from '@react-native-picker/picker'; // Picker 컴포넌트 추가 설치 필요
 
 const emailDomains = ['gmail.com', 'naver.com', 'daum.net', 'yahoo.com'];
 
@@ -21,6 +20,7 @@ const NormalInfo = () => {
   const [phone, setPhone] = useState('');
   const [gender, setGender] = useState('');
   const [profileImage, setProfileImage] = useState<string | null>(null);
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
 
   useEffect(() => {
     setEmail(`${emailLocal}@${emailDomain}`);
@@ -125,6 +125,15 @@ const NormalInfo = () => {
     }
   };
 
+  const toggleDropdown = () => {
+    setIsDropdownOpen(!isDropdownOpen);
+  };
+
+  const selectDomain = (domain: string) => {
+    setEmailDomain(domain);
+    setIsDropdownOpen(false);
+  };
+
   return (
     <SafeAreaView style={styles.container}>
       <ScrollView>
@@ -169,23 +178,53 @@ const NormalInfo = () => {
 
         <View style={styles.inputContainer}>
           <Text style={styles.label}>이메일 (필수)</Text>
-          <View style={styles.emailInputContainer}>
-            <TextInput
-              style={[styles.input, styles.emailLocalInput]}
-              placeholder="이메일 ID"
-              value={emailLocal}
-              onChangeText={setEmailLocal}
-            />
-            <Text style={styles.atSymbol}>@</Text>
-            <Picker
-              selectedValue={emailDomain}
-              onValueChange={(itemValue) => setEmailDomain(itemValue)}
-              style={styles.picker}
-            >
-              {emailDomains.map((domain, index) => (
-                <Picker.Item key={index} label={domain} value={domain} />
-              ))}
-            </Picker>
+          <View style={styles.emailContainer}>
+            <View style={styles.emailInputContainer}>
+              <TextInput
+                style={styles.emailLocalInput}
+                placeholder="이메일 ID"
+                value={emailLocal}
+                onChangeText={setEmailLocal}
+              />
+              <Text style={styles.atSymbol}>@</Text>
+              <TouchableOpacity 
+                style={styles.domainButton}
+                onPress={toggleDropdown}
+              >
+                <Text>{emailDomain}</Text>
+                <Ionicons 
+                  name={isDropdownOpen ? "chevron-up" : "chevron-down"} 
+                  size={20} 
+                  color="#666" 
+                />
+              </TouchableOpacity>
+            </View>
+            
+            {isDropdownOpen && (
+              <Modal
+                visible={isDropdownOpen}
+                transparent={true}
+                animationType="none"
+                onRequestClose={() => setIsDropdownOpen(false)}
+              >
+                <TouchableOpacity 
+                  style={styles.modalOverlay}
+                  onPress={() => setIsDropdownOpen(false)}
+                >
+                  <View style={[styles.dropdownContainer, { position: 'relative' }]}>
+                    {emailDomains.map((domain, index) => (
+                      <TouchableOpacity
+                        key={index}
+                        style={styles.dropdownItem}
+                        onPress={() => selectDomain(domain)}
+                      >
+                        <Text style={styles.dropdownText}>{domain}</Text>
+                      </TouchableOpacity>
+                    ))}
+                  </View>
+                </TouchableOpacity>
+              </Modal>
+            )}
           </View>
         </View>
 
@@ -356,26 +395,71 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: '#fff',
   },
+  emailContainer: {
+    position: 'relative',
+    zIndex: 1,
+  },
   emailInputContainer: {
     flexDirection: 'row',
     alignItems: 'center',
+  },
+  emailLocalInput: {
+    flex: 2,
+    fontSize: 16,
+    paddingVertical: 8,
     borderWidth: 1,
     borderColor: '#e0e0e0',
     borderRadius: 4,
+    marginRight: 8,
     paddingHorizontal: 8,
-  },
-  emailLocalInput: {
-    flex: 1,
-    fontSize: 16,
-    paddingVertical: 8,
   },
   atSymbol: {
     fontSize: 16,
     marginHorizontal: 4,
   },
-  picker: {
+  domainButton: {
     flex: 1,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#e0e0e0',
+    borderRadius: 4,
+    paddingHorizontal: 10,
+    paddingVertical: 8,
+    backgroundColor: '#fff',
+    minWidth: 100,
+  },
+  dropdownContainer: {
+    backgroundColor: '#fff',
+    borderWidth: 1,
+    borderColor: '#e0e0e0',
+    borderRadius: 4,
+    width: '80%',
+    maxWidth: 300,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    elevation: 5,
+  },
+  dropdownItem: {
+    padding: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: '#e0e0e0',
+  },
+  dropdownText: {
     fontSize: 16,
+    color: '#333',
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
   },
 });
 
