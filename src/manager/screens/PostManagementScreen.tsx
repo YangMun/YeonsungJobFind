@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, Button, StyleSheet, ActivityIndicator, FlatList, Alert, TouchableOpacity } from 'react-native';
+import { View, Text, TextInput, StyleSheet, ActivityIndicator, FlatList, Alert, TouchableOpacity, Button } from 'react-native';
 import { Picker } from '@react-native-picker/picker';
 import axios from 'axios';
 import { API_URL } from '../../common/utils/validationUtils';
 import Icon from 'react-native-vector-icons/MaterialIcons';
+import RNPickerSelect from 'react-native-picker-select';
+
 
 //헤더
 const Header = () => {
@@ -22,15 +24,18 @@ interface PostData {
   company_name: string;
 }
 
-const DataList: React.FC = () => {
+interface ParentProps {
+}
+
+const DataList: React.FC<ParentProps> = () => {
   const [data, setData] = useState<PostData[]>([]); // PostData 배열 타입으로 설정
   const [loading, setLoading] = useState<boolean>(true); // 로딩 상태 타입을 boolean으로 설정
 
   // API 데이터 호출 함수
   const fetchData = async () => {
     try {
-      const response = await axios.get(`${API_URL}/api/postManagement/getAllPostJob`);
-      const applications = response.data.applications;
+      const response = await axios.get(`${API_URL}/api/postManagement/selectManagerPostJob`);
+      const applications = response.data.results;
       setData(applications);
       console.log('데이터 가져오기 성공:', response.data); // 데이터 확인
     } catch (error) {
@@ -69,7 +74,6 @@ const DataList: React.FC = () => {
 
   // 삭제 버튼 클릭 시 확인 알림
   const handleDelete = (id: number) => {
-    deletePost(id);
     Alert.alert(
       '글 삭제',
       '정말 이 글을 삭제하시겠습니까?',
@@ -80,6 +84,10 @@ const DataList: React.FC = () => {
     );
   };
 
+  const changeData = (listData: PostData[]) => {
+    setData(listData);
+  };
+  
   // 각 항목을 렌더링하는 함수
   const renderItem = ({ item }: { item: PostData }) => (
       <View style={styles.item}>
@@ -96,6 +104,7 @@ const DataList: React.FC = () => {
 
   return (
     <View style={styles.container}>
+      <ConditionBar changeData={changeData} />
       {loading ? (
         <ActivityIndicator size="large" color="#0000ff" />  // 로딩 스피너 표시
       ) : (
@@ -110,50 +119,83 @@ const DataList: React.FC = () => {
   );
 };
 
-interface SearchConditions {
-  category: string;
+interface ChildProps {
+  changeData: (listData: PostData[]) => void;
 }
 
-interface ConditionBarProps {
-  onSearch: (conditions: SearchConditions) => void; // onSearch의 매개변수 타입을 정의
-}
+const ConditionBar: React.FC<ChildProps> = ({changeData}) => {
+  const [selectedValue, setSelectedValue] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [companyName, setCompanyName] = useState('');
 
-const ConditionBar: React.FC<ConditionBarProps> = ({ onSearch }) => {
-  const [selectedCategory, setSelectedCategory] = useState('all');
+  const handleSearch = async () => {
+    setLoading(true);
+    
+    try {
+      const response = await axios.get(`${API_URL}/api/postManagement/selectManagerPostJob`, {
+        params: {
+          category: selectedValue,
+          company: companyName,
+        },
+      });
 
-  const handleSearch = () => {
-    onSearch({ category: selectedCategory });
+      // API 호출 성공 시
+      const applications = response.data.results;
+      setLoading(false);
+      console.log('조회된 데이터:', response.data);
+      changeData(applications);
+
+    } catch (error) {
+      // API 호출 실패 시
+      setLoading(false);
+      console.error('API 호출 오류:', error);
+      Alert.alert('조회 실패', '데이터를 가져오는 데 오류가 발생했습니다.');
+    }
   };
 
   return (
-    <View style={styles.conditionBar}>
-      <Text style={styles.label}>조건</Text>
-
-      <Picker
-        selectedValue={selectedCategory}
-        style={styles.picker}
-        onValueChange={(itemValue) => setSelectedCategory(itemValue)}
-      >
-        <Picker.Item label="전체" value="0" />
-        <Picker.Item label="구인" value="1" />
-        <Picker.Item label="구직" value="2" />
-      </Picker>
-
-      <Button title="조회" onPress={handleSearch} />
+    <View style={styles.contContainer}>
+      <View style={styles.pickerContainer}>
+        {/* 조건 선택 */}
+        <RNPickerSelect
+          onValueChange={(value) => setSelectedValue(value)}
+          items={[
+            { label: '구인', value: '1' },
+            { label: '구직', value: '2' },
+          ]}
+          placeholder={{
+            label: '전체',
+            value: '',
+            color: '#9EA0A4',
+          }}
+          style={{
+            inputIOS: styles.picker,
+            inputAndroid: styles.picker,
+          }}
+        />
+      </View>
+      {/* 회사명 입력 */}
+      <View style={styles.companyInputContainer}>
+        <TextInput
+          style={styles.contInput}
+          placeholder="회사명"
+          value={companyName}
+          onChangeText={setCompanyName}
+        />
+      </View>
+      {/* 조회 버튼 */}
+      <TouchableOpacity style={styles.buttonContainer} onPress={handleSearch}>
+        <Text style={styles.buttonText}>조회</Text>
+      </TouchableOpacity>
     </View>
   );
 };
 
 const PostManagementScreen = () => {
-  const handleSearch = (conditions: any) => {
-    console.log('조회 조건:', conditions);
-    // 조회 조건에 따라 데이터를 불러오는 로직 추가
-  };
   return (
 
     <View style={styles.container}>
       <Header />
-      <ConditionBar onSearch={handleSearch} />
       <DataList />
     </View>
   );
@@ -162,17 +204,7 @@ const PostManagementScreen = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    paddingTop: 50,
-  },
-  conditionBar: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    padding: 10,
-    backgroundColor: '#f2f2f2',
-  },
-  label: {
-    fontSize: 16,
-    marginRight: 10,
+    paddingTop: 10,
   },
   input: {
     height: 40,
@@ -180,11 +212,6 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     flex: 1,
     paddingHorizontal: 10,
-    marginRight: 10,
-  },
-  picker: {
-    height: 40,
-    width: 150,
     marginRight: 10,
   },
   item: {
@@ -241,6 +268,59 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.2,
     shadowRadius: 2,
     elevation: 3, // Android 그림자
+  },
+  contContainer: {
+    flexDirection: 'row', // 가로 배치
+    alignItems: 'center', // 세로 정렬
+    padding: 10,
+    backgroundColor: '#f5f5f5',
+  },
+  pickerContainer: {
+    marginRight: 10, // 간격 조정
+    width: 70,
+  },
+  picker: {
+    fontSize: 16,
+    paddingVertical: 8,
+    paddingHorizontal: 10,
+    borderWidth: 1,
+    borderColor: '#ccc',
+    borderRadius: 8,
+    color: '#333',
+  },
+  companyInputContainer: {
+    flex: 1, // 동일한 크기를 위한 flex 설정
+    flexDirection: 'row', // "회사:"와 입력창을 가로로 배치
+    alignItems: 'center',
+  },
+  label: {
+    fontSize: 16,
+    marginRight: 5,
+    color: '#333',
+  },
+  contInput: {
+    flex: 1, // 동일한 크기를 위한 flex 설정
+    fontSize: 16,
+    paddingVertical: 8,
+    paddingHorizontal: 10,
+    borderWidth: 1,
+    borderColor: '#ccc',
+    borderRadius: 8,
+    color: '#333',
+  },
+  buttonContainer: {
+    width: 55, // 버튼의 고정 너비 설정
+    backgroundColor: '#007BFF', // 파란색 배경
+    borderRadius: 8, // 둥근 모서리
+    alignItems: 'center', // 텍스트 가운데 정렬
+    justifyContent: 'center', // 버튼 텍스트 수직 가운데 정렬
+    paddingVertical: 10, // 버튼 높이 설정
+    margin: 10,
+  },
+  buttonText: {
+    color: '#fff', // 흰색 텍스트
+    fontSize: 16, // 텍스트 크기
+    fontWeight: 'bold', // 굵은 텍스트
   },
 });
 
