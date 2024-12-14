@@ -1282,6 +1282,35 @@ app.get('/api/users', async (req, res) => {
   }
 });
 
+// 관리자 게시물 조회
+app.get('/api/postManagement/selectManagerPostJob', async (req, res) => {
+  const { category, company } = req.query;
+  
+
+  let query = 'SELECT id, title, contents, company_name FROM PostJob WHERE 1=1'; // 기본 WHERE 조건
+  const queryParams = [];
+
+  // category 값이 있으면 조건 추가
+  if (category) {
+    query += ' AND category = ?';
+    queryParams.push(category);
+  }
+
+  // company 값이 있으면 조건 추가
+  if (company) {
+    query += ' AND company_name LIKE ?';
+    queryParams.push(`%${company}%`);
+  }
+
+  try {
+    const [results] = await pool.query(query, queryParams);
+    res.json({success: true, results}); // 결과 반환
+  } catch (error) {
+    console.error('쿼리 오류:', error);
+    res.status(500).json({ message: '서버 오류' });
+  }
+});
+
 // 사용자 삭제 API
 app.delete('/api/users/:type/:id', async (req, res) => {
   const { type, id } = req.params;
