@@ -17,6 +17,9 @@ export const requestClaudeResponse = async (
   sectionTitle: string
 ): Promise<ClaudeResponse> => {
   try {
+    // 약간의 지연을 추가하되, 로그는 제거
+    await new Promise(resolve => setTimeout(resolve, 100));
+
     if (!CLADUEKEY) {
       console.error('Anthropic API Key is not defined');
       return {

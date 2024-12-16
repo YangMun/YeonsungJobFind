@@ -376,12 +376,6 @@ const ProfileEditView = () => {
         <View style={styles.bottomPadding} />
 
       </ScrollView>
-
-      <View style={styles.bottomButtonContainer}>
-      <TouchableOpacity style={styles.saveButton}>
-        <Text style={styles.saveButtonText}>저장하기</Text>
-      </TouchableOpacity>
-    </View>
     </SafeAreaView>
   );
 };
@@ -609,17 +603,7 @@ const styles = StyleSheet.create({
     color: '#666',
     marginTop: 2,
   },
-  bottomButtonContainer: {
-    position: 'absolute',
-    bottom: 0,
-    left: 0,
-    right: 0,
-    backgroundColor: 'white',
-    padding: 16,
-    borderTopWidth: 1,
-    borderTopColor: '#e0e0e0',
-    paddingBottom: Platform.OS === 'ios' ? 34 : 24,
-  },
+  
   saveButton: {
     backgroundColor: '#4a90e2',
     padding: 16,
