@@ -1284,22 +1284,28 @@ app.get('/api/users', async (req, res) => {
 
 // 관리자 게시물 조회
 app.get('/api/postManagement/selectManagerPostJob', async (req, res) => {
-  const { category, company } = req.query;
+  const { category, keyword } = req.query;
   
 
-  let query = 'SELECT id, title, contents, company_name FROM PostJob WHERE 1=1'; // 기본 WHERE 조건
+  let query = 'SELECT id, title, contents, company_name FROM PostJob WHERE 1=1';
   const queryParams = [];
 
   // category 값이 있으면 조건 추가
   if (category) {
-    query += ' AND category = ?';
-    queryParams.push(category);
+    if(category == 1) {
+      query += ' AND title LIKE ?'
+    }
+    else if(category == 2) {
+      query += ' AND contents LIKE ?';
+    }
+    else if(category == 3) {
+      query += ' AND company_name LIKE ?'
+    }
   }
 
-  // company 값이 있으면 조건 추가
-  if (company) {
-    query += ' AND company_name LIKE ?';
-    queryParams.push(`%${company}%`);
+  // keyword 값이 있으면 조건 추가
+  if (keyword) {
+    queryParams.push(`%${keyword}%`);
   }
 
   try {
