@@ -4,9 +4,8 @@
  * 이 컴포넌트는 구인자의 프로필 정보를 표시하고 관리하는 화면입니다.
  * 구인자는 이 화면에서 자신의 정보를 확인하고 수정할 수 있습니다.
  */
-
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, SafeAreaView, ActivityIndicator, TextInput, Alert, Platform } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, SafeAreaView, ActivityIndicator, TextInput, Alert, Platform, Modal } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import axios from 'axios';
 import { useAuth } from '../../context/AuthContext';
@@ -15,12 +14,12 @@ import { StackNavigationProp } from '@react-navigation/stack';
 import { API_URL, ProfileData } from '../../common/utils/validationUtils';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-
-
 // RootStackParamList 타입을 정의합니다. 실제 네비게이션 구조에 맞게 조정해야 합니다.
 type RootStackParamList = {
   Login: undefined;
 };
+
+const emailDomains = ['gmail.com', 'naver.com', 'daum.net', 'yahoo.com', 'yeonsung.ac.kr'];
 
 const ProfileScreen: React.FC = () => {
   const [profileData, setProfileData] = useState<ProfileData | null>(null);
@@ -30,6 +29,17 @@ const ProfileScreen: React.FC = () => {
   const [editedEmail, setEditedEmail] = useState('');
   const { userId, logout } = useAuth();
   const navigation = useNavigation<StackNavigationProp<RootStackParamList>>();
+  const [editedEmailLocal, setEditedEmailLocal] = useState('');
+  const [editedEmailDomain, setEditedEmailDomain] = useState(emailDomains[0]);
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+
+  useEffect(() => {
+    if (profileData?.email) {
+      const [localPart, domain] = profileData.email.split('@');
+      setEditedEmailLocal(localPart);
+      setEditedEmailDomain(domain || emailDomains[0]);
+    }
+  }, [profileData]);
 
   useEffect(() => {
     if (userId) {  // userId가 존재할 때만 프로필 데이터를 가져옵니다.
@@ -56,18 +66,18 @@ const ProfileScreen: React.FC = () => {
 
   const handleEdit = async () => {
     if (isEditing) {
+      const fullEmail = `${editedEmailLocal}@${editedEmailDomain}`;
       try {
         const response = await axios.put(`${API_URL}/api/update-employer-profile/${userId}`, {
           phone_number: editedPhone,
-          email: editedEmail,
+          email: fullEmail,
         });
         if (response.data.success) {
           setProfileData(prevData => ({
             ...prevData!,
             phone_number: editedPhone,
-            email: editedEmail,
+            email: fullEmail,
           }));
-          console.log('프로필이 성공적으로 업데이트되었습니다.');
         } else {
           console.error('프로필 업데이트에 실패했습니다.');
         }
@@ -174,13 +184,17 @@ const ProfileScreen: React.FC = () => {
           editedValue={editedPhone}
           onChangeText={setEditedPhone}
         />
-        <InfoItem 
-          icon="mail-outline" 
-          label="이메일" 
-          value={profileData?.email || '없음'} 
+        <InfoItem
+          icon="mail-outline"
+          label="이메일"
+          value={profileData?.email || '없음'}
           isEditing={isEditing}
-          editedValue={editedEmail}
-          onChangeText={setEditedEmail}
+          editedValue={editedEmailLocal}
+          onChangeText={setEditedEmailLocal}
+          emailDomains={emailDomains}
+          onEmailDomainChange={setEditedEmailDomain}
+          editedEmailDomain={editedEmailDomain} 
+          setEditedEmailDomain={setEditedEmailDomain}
         />
       </View>
       
@@ -212,30 +226,105 @@ const ProfileScreen: React.FC = () => {
   );
 };
 
-const InfoItem: React.FC<{ 
-  icon: string; 
-  label: string; 
+const InfoItem: React.FC<{
+  icon: string;
+  label: string;
   value: string;
   isEditing: boolean;
   editedValue: string;
   onChangeText: (text: string) => void;
-}> = ({ icon, label, value, isEditing, editedValue, onChangeText }) => (
-  <View style={styles.infoItem}>
-    <Ionicons name={icon as keyof typeof Ionicons.glyphMap} size={24} color="#777" style={styles.infoIcon} />
-    <View style={styles.infoTextContainer}>
-      <Text style={styles.infoLabel}>{label}</Text>
-      {isEditing ? (
-        <TextInput
-          style={styles.infoInput}
-          value={editedValue}
-          onChangeText={onChangeText}
+  emailDomains?: string[];
+  onEmailDomainChange?: (domain: string) => void;
+  editedEmailDomain?: string;
+  setEditedEmailDomain?: (domain: string) => void;
+}> = ({
+  icon,
+  label,
+  value,
+  isEditing,
+  editedValue,
+  onChangeText,
+  emailDomains = [],
+  onEmailDomainChange,
+  editedEmailDomain,
+  setEditedEmailDomain,
+}) => {
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+
+  const renderEmailEdit = () => {
+    if (!setEditedEmailDomain || !editedEmailDomain) return null;
+  return (
+    <View style={styles.emailInputContainer}>
+      <TextInput
+        style={[styles.infoInput, { flex: 2 }]}
+        value={editedValue}
+        onChangeText={onChangeText}
+        placeholder="이메일 ID"
+      />
+      <Text style={styles.atSymbol}>@</Text>
+      <TouchableOpacity
+        style={styles.domainButton}
+        onPress={() => setIsDropdownOpen(!isDropdownOpen)}
+      >
+        <Text>{editedEmailDomain}</Text>
+        <Ionicons
+          name={isDropdownOpen ? "chevron-up" : "chevron-down"}
+          size={20}
+          color="#666"
         />
-      ) : (
-        <Text style={styles.infoValue}>{value}</Text>
+      </TouchableOpacity>
+
+      {isDropdownOpen && (
+        <Modal
+          visible={isDropdownOpen}
+          transparent={true}
+          animationType="none"
+          onRequestClose={() => setIsDropdownOpen(false)}
+        >
+          <TouchableOpacity
+            style={styles.modalOverlay}
+            onPress={() => setIsDropdownOpen(false)}
+          >
+            <View style={styles.dropdownContainer}>
+              {emailDomains.map((domain, index) => (
+                <TouchableOpacity
+                  key={index}
+                  style={styles.dropdownItem}
+                  onPress={() => {
+                    setEditedEmailDomain(domain); // 선택한 도메인 즉시 반영
+                    setIsDropdownOpen(false); // 드롭다운 닫기
+                  }}
+                >
+                  <Text style={styles.dropdownText}>{domain}</Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+          </TouchableOpacity>
+        </Modal>
       )}
     </View>
-  </View>
-);
+  );
+};
+
+  return (
+    <View style={styles.infoItem}>
+      <Ionicons name={icon as keyof typeof Ionicons.glyphMap} size={24} color="#777" style={styles.infoIcon} />
+      <View style={styles.infoTextContainer}>
+        <Text style={styles.infoLabel}>{label}</Text>
+        {label === '이메일' && isEditing ? (
+          renderEmailEdit()
+        ) : (
+          <TextInput
+            style={isEditing ? styles.infoInput : styles.infoValue}
+            value={isEditing ? editedValue : value}
+            onChangeText={onChangeText}
+            editable={isEditing}
+          />
+        )}
+      </View>
+    </View>
+  );
+};
 
 const styles = StyleSheet.create({
   container: {
@@ -328,6 +417,48 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     alignItems: 'center',
     flex: 1,
+  },
+  emailInputContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  atSymbol: {
+    marginHorizontal: 5,
+  },
+  domainButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderBottomWidth: 1,
+    borderBottomColor: '#ddd',
+    paddingVertical: 5,
+  },
+  dropdownContainer: {
+    backgroundColor: '#fff',
+    borderWidth: 1,
+    borderColor: '#e0e0e0',
+    borderRadius: 4,
+    width: '80%',
+    maxWidth: 300,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    elevation: 5,
+  },
+  dropdownItem: {
+    padding: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: '#e0e0e0',
+  },
+  dropdownText: {
+    fontSize: 16,
+    color: '#333',
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
   },
 });
 
