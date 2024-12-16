@@ -44,7 +44,7 @@ const PostJobScreen: React.FC = () => {
   const [showRecruitmentDeadlineCalendar, setShowRecruitmentDeadlineCalendar] = useState(false);
 
   const maxLengths = {
-    title: 30,
+    title: 60,
     contents: 500,
     companyName: 15,
     location: 15,
