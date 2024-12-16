@@ -53,7 +53,7 @@ CREATE TABLE jobSeeker (
 CREATE TABLE PostJob (
     id INT AUTO_INCREMENT PRIMARY KEY,
     employer_id varchar(7) NOT NULL,  
-    title VARCHAR(30) NOT NULL,   # 공고 제목
+    title VARCHAR(60) NOT NULL,   # 공고 제목
     contents VARCHAR(500) NOT NULL, # 상세 내용
     company_name VARCHAR(15) NOT NULL, # 회사명
     location VARCHAR(15) NOT NULL, # 근무 위치
