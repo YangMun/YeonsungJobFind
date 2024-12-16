@@ -126,7 +126,8 @@ interface ChildProps {
 const ConditionBar: React.FC<ChildProps> = ({changeData}) => {
   const [selectedValue, setSelectedValue] = useState('');
   const [loading, setLoading] = useState(false);
-  const [companyName, setCompanyName] = useState('');
+  const [keyword, setKeyword] = useState('');
+  const [pointerEvents, setPointerEvents] = useState<'none' | 'auto'>('none'); // TextInput의 pointerEvents 상태
 
   const handleSearch = async () => {
     setLoading(true);
@@ -135,7 +136,7 @@ const ConditionBar: React.FC<ChildProps> = ({changeData}) => {
       const response = await axios.get(`${API_URL}/api/postManagement/selectManagerPostJob`, {
         params: {
           category: selectedValue,
-          company: companyName,
+          keyword: keyword,
         },
       });
 
@@ -153,15 +154,26 @@ const ConditionBar: React.FC<ChildProps> = ({changeData}) => {
     }
   };
 
+  const handlePickerChange = (value: string) => {
+    setSelectedValue(value);
+    // 조건에 따라 pointerEvents 변경
+    if (value) {
+      setPointerEvents('auto'); // 값이 선택되면 입력 가능
+    } else {
+      setPointerEvents('none'); // 값이 없으면 입력 비활성화
+    }
+  };
+
   return (
     <View style={styles.contContainer}>
       <View style={styles.pickerContainer}>
         {/* 조건 선택 */}
         <RNPickerSelect
-          onValueChange={(value) => setSelectedValue(value)}
+          onValueChange={handlePickerChange}
           items={[
-            { label: '구인', value: '1' },
-            { label: '구직', value: '2' },
+            { label: '제목', value: '1' },
+            { label: '내용', value: '2' },
+            { label: '회사명', value: '3' },
           ]}
           placeholder={{
             label: '전체',
@@ -174,13 +186,14 @@ const ConditionBar: React.FC<ChildProps> = ({changeData}) => {
           }}
         />
       </View>
-      {/* 회사명 입력 */}
+      {/* 검색어 입력 */}
       <View style={styles.companyInputContainer}>
         <TextInput
           style={styles.contInput}
-          placeholder="회사명"
-          value={companyName}
-          onChangeText={setCompanyName}
+          placeholder="검색"
+          value={keyword}
+          onChangeText={setKeyword}
+          pointerEvents={pointerEvents}
         />
       </View>
       {/* 조회 버튼 */}
