@@ -96,11 +96,16 @@ const ProfileEditView = () => {
     try {
       const response = await axios.get(`${API_URL}/api/get-experience-activities/${userId}`);
       if (response.data.success) {
-        setExperienceActivities(response.data.activities);
-        setActivityCount(response.data.count);
+        setExperienceActivities(response.data.activities || []);
+        setActivityCount(response.data.activities?.length || 0);
+      } else {
+        setExperienceActivities([]);
+        setActivityCount(0);
       }
     } catch (error) {
       console.error('경험/활동/교육 정보 조회 오류:', error);
+      setExperienceActivities([]);
+      setActivityCount(0);
     }
   }, [userId]);
 
@@ -110,11 +115,16 @@ const ProfileEditView = () => {
     try {
       const response = await axios.get(`${API_URL}/api/get-certifications/${userId}`);
       if (response.data.success) {
-        setCertifications(response.data.certifications);
-        setCertificationCount(response.data.count);
+        setCertifications(response.data.certifications || []);
+        setCertificationCount(response.data.certifications?.length || 0);
+      } else {
+        setCertifications([]);
+        setCertificationCount(0);
       }
     } catch (error) {
       console.error('자격증 정보 조회 오류:', error);
+      setCertifications([]);
+      setCertificationCount(0);
     }
   }, [userId]);
 
