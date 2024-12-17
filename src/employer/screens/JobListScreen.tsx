@@ -1,10 +1,3 @@
-/**
- * JobListScreen.tsx
- * 
- * 이 컴포넌트는 구인자가 등록한 구인 목록을 표시하는 화면입니다.
- * 구인자는 이 화면에서 자신이 등록한 구인 정보를 확인하고 관리할 수 있습니다.
- */
-
 import React, { useState, useCallback } from 'react';
 import { View, StyleSheet, FlatList, TouchableOpacity, Text, SafeAreaView, RefreshControl, Platform } from 'react-native';
 import axios from 'axios';

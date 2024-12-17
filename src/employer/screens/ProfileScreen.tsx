@@ -1,11 +1,5 @@
-/**
- * ProfileScreen.tsx
- * 
- * 이 컴포넌트는 구인자의 프로필 정보를 표시하고 관리하는 화면입니다.
- * 구인자는 이 화면에서 자신의 정보를 확인하고 수정할 수 있습니다.
- */
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, SafeAreaView, ActivityIndicator, TextInput, Alert, Platform, Modal } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, SafeAreaView, ActivityIndicator, TextInput, Alert, Modal } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import axios from 'axios';
 import { useAuth } from '../../context/AuthContext';
