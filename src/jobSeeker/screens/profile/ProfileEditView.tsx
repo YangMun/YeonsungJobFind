@@ -47,13 +47,33 @@ const ProfileEditView = () => {
   const [certificationCount, setCertificationCount] = useState(0);
   const [careerStatement, setCareerStatement] = useState('');
 
-  useEffect(() => {
-    fetchProfileSummary();
-    fetchEducationInfo();
-    fetchExperienceActivities();
-    fetchCertifications();
-    fetchCareerStatement();
-  }, []);
+  useFocusEffect(
+    useCallback(() => {
+      let isActive = true;
+
+      const fetchData = async () => {
+        if (!userId || !isActive) return;
+
+        try {
+          await Promise.all([
+            fetchProfileSummary(),
+            fetchEducationInfo(),
+            fetchExperienceActivities(),
+            fetchCertifications(),
+            fetchCareerStatement()
+          ]);
+        } catch (error) {
+          console.error('데이터 로딩 중 오류 발생:', error);
+        }
+      };
+
+      fetchData();
+
+      return () => {
+        isActive = false;
+      };
+    }, [userId])
+  );
 
   const fetchProfileSummary = async () => {
     if (!userId) return;
@@ -148,15 +168,6 @@ const ProfileEditView = () => {
       console.error('자기소개서 조회 오류:', error);
     }
   }, [userId]);
-
-  useFocusEffect(
-    useCallback(() => {
-      fetchEducationInfo();
-      fetchExperienceActivities();
-      fetchCertifications();
-      fetchCareerStatement();
-    }, [fetchEducationInfo, fetchExperienceActivities, fetchCertifications, fetchCareerStatement])
-  );
 
   const handleNavigateToNormalInfo = () => {
     navigation.navigate('NormalInfo');
