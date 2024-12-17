@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, TextInput, StyleSheet, ActivityIndicator, FlatList, Alert, TouchableOpacity, Button } from 'react-native';
-import { Picker } from '@react-native-picker/picker';
+import { View, Text, TextInput, StyleSheet, ActivityIndicator, FlatList, Alert, TouchableOpacity } from 'react-native';
 import axios from 'axios';
 import { API_URL } from '../../common/utils/validationUtils';
 import Icon from 'react-native-vector-icons/MaterialIcons';
@@ -37,7 +36,7 @@ const DataList: React.FC<ParentProps> = () => {
       const response = await axios.get(`${API_URL}/api/postManagement/selectManagerPostJob`);
       const applications = response.data.results;
       setData(applications);
-      console.log('데이터 가져오기 성공:', response.data); // 데이터 확인
+      // console.log('데이터 가져오기 성공:', response.data); // 데이터 확인
     } catch (error) {
       console.error('데이터를 가져오는 중 오류 발생:', error);
       setLoading(false);
@@ -49,8 +48,8 @@ const DataList: React.FC<ParentProps> = () => {
   }, []);
 
   useEffect(() => {
-    console.log('데이터가 변경되었습니다:', data);  // 데이터 상태가 변경될 때마다 출력
-    console.log(Array.isArray(data));
+    //console.log('데이터가 변경되었습니다:', data);  // 데이터 상태가 변경될 때마다 출력
+    // console.log(Array.isArray(data));
     setLoading(false);
   }, [data]);  // data가 변경될 때마다 실행
 
@@ -143,7 +142,7 @@ const ConditionBar: React.FC<ChildProps> = ({changeData}) => {
       // API 호출 성공 시
       const applications = response.data.results;
       setLoading(false);
-      console.log('조회된 데이터:', response.data);
+      // console.log('조회된 데이터:', response.data);
       changeData(applications);
 
     } catch (error) {
