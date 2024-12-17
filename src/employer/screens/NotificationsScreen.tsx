@@ -1,12 +1,5 @@
-/**
- * NotificationsScreen.tsx
- * 
- * 이 컴포넌트는 구인자에게 전달되는 알림을 표시하는 화면입니다.
- * 새로운 지원자, 메시지, 시스템 알림 등이 이 화면에 표시됩니다.
- */
-
 import React, { useState, useEffect, useCallback } from 'react';
-import { View, Text, StyleSheet, FlatList, TouchableOpacity, SafeAreaView,Modal,ScrollView,Alert,RefreshControl} from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, SafeAreaView,Modal,ScrollView,Alert,RefreshControl} from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import axios from 'axios';
 import { useAuth } from '../../context/AuthContext';

@@ -1,8 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, SafeAreaView, Platform, Modal, FlatList, Image, Linking } from 'react-native';
-import { useFocusEffect } from '@react-navigation/native';
 import {Message} from '../../common/utils/validationUtils';
-// import bmo from '../../assets/bmo.png'
 // 미리 정의된 응답들
 const predefinedResponses = {
   '지원 방법': '채용공고 상세페이지에서 지원하기 버튼을 클릭하시면 됩니다.',

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Ionicons } from '@expo/vector-icons';
-import { View, Text, StyleSheet } from 'react-native';
+import { View, StyleSheet } from 'react-native';
 import HomeScreen from './HomeScreen';
 import NotificationScreen from './NotificationScreen';
 import MessageScreen from './MessageScreen';

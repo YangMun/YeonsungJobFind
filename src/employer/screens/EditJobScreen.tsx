@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { View, Text, StyleSheet, ScrollView, TextInput, TouchableOpacity, Alert, SafeAreaView, Platform } from 'react-native';
-import { Calendar, LocaleConfig, DateData } from 'react-native-calendars';
+import { View, Text, StyleSheet, ScrollView, TextInput, TouchableOpacity, Alert, SafeAreaView } from 'react-native';
+import { Calendar, DateData } from 'react-native-calendars';
 import { validatePostJob, API_URL } from '../../common/utils/validationUtils';
 import axios from 'axios';
 import { RouteProp } from '@react-navigation/native';

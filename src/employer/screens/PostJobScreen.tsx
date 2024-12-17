@@ -1,12 +1,5 @@
-/**
- * PostJobScreen.tsx
- * 
- * 이 컴포넌트는 구인자가 새로운 구인 정보를 등록하는 화면입니다.
- * 구인 조건, 업무 내용, 근무 시간 등의 정보를 입력할 수 있습니다.
- */
-
 import React, { useState, useRef } from 'react';
-import { View, Text, StyleSheet, ScrollView, TextInput, TouchableOpacity, Alert, SafeAreaView, Platform } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TextInput, TouchableOpacity, Alert, SafeAreaView } from 'react-native';
 import { Calendar, LocaleConfig, DateData } from 'react-native-calendars';
 import { validatePostJob, API_URL } from '../../common/utils/validationUtils';
 import { useAuth } from '../../context/AuthContext';
