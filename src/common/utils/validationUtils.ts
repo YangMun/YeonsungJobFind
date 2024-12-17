@@ -408,7 +408,7 @@ export const validateGradInfo = (data: GradInfoData): ValidationResult => {
   }
 
   // 졸업여부 유효성 사
-  const graduationOptions = ['졸업', '재학중', '휴학중', '수료', '중', '자퇴', '졸업예정'];
+  const graduationOptions = ['졸업', '재학중', '휴학중', '수료', '중퇴', '자퇴', '졸업예정'];
   if (!graduationOptions.includes(data.graduationStatus)) {
     return { isValid: false, message: '올바른 졸업여부를 선택해주세요.' };
   }
